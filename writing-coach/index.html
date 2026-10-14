@@ -30,7 +30,7 @@
 <script>
 (() => {
   // Set this to the HTTPS origin of the deployed Vercel project, without a trailing path.
-  const API_BASE_URL = "PASTE_VERCEL_API_URL_HERE";
+  const API_BASE_URL = "https://virtualaihuman.vercel.app";
   const $ = id => document.getElementById(id);
   const status = (message, error=false) => { $('status').textContent = message; $('status').className = 'status' + (error ? ' error' : ''); };
   async function callApi(path, body) {
