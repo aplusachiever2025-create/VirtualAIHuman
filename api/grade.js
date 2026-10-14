@@ -66,6 +66,11 @@ function getRequestedWordRange(taskPrompt) {
   }
   return null;
 }
+
+function isWordCountRequirement(requirement) {
+  return /\b(word\s*count|\d{2,3}\s*[-–—]\s*\d{2,3}\s*words?|words?\s*(?:in|between|within)?\s*\d{2,3})\b/i.test(String(requirement || ""));
+}
+
 function parseAndValidateReport(raw, writingType, studentText, taskPrompt) {
   const cleaned = raw.replace(/^\s*```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
   let report;
@@ -87,7 +92,31 @@ function parseAndValidateReport(raw, writingType, studentText, taskPrompt) {
   if (!report.taskUnderstanding.every(x => x && typeof x.requirement === "string" && ["Met","Partly met","Needs attention","Not applicable"].includes(x.status) && typeof x.evidence === "string" && typeof x.explanation === "string")) throw new Error("任务要求诊断格式无效。");
   if (!report.genuineErrors.every(x => x && typeof x.original === "string" && typeof x.correction === "string" && typeof x.explanation === "string")) throw new Error("真实错误栏目格式无效。");
   for (const key of ["strengths","improvementPriorities","optionalSuggestions","revisionPractice","organisationAndTone"]) if (!stringsOnly(report[key])) throw new Error("Assessment 栏目格式无效：" + key);
+
   const wordCount = countEnglishWords(studentText), wordRange = getRequestedWordRange(taskPrompt);
+  // The server is authoritative for any explicit word-count requirement. Never trust
+  // the model's Met/Not met label for this item because it can contradict the count.
+  if (wordRange) {
+    const withinRange = wordCount >= wordRange.min && wordCount <= wordRange.max;
+    const wordItem = report.taskUnderstanding.find(x => isWordCountRequirement(x.requirement));
+    if (wordItem) {
+      wordItem.status = withinRange ? "Met" : "Needs attention";
+      wordItem.evidence = `Server-calculated word count: ${wordCount}; required range: ${wordRange.min}–${wordRange.max} words.`;
+      wordItem.explanation = withinRange
+        ? `The server counted ${wordCount} words, which is within the required range of ${wordRange.min}–${wordRange.max} words.`
+        : `The server counted ${wordCount} words, which is outside the required range of ${wordRange.min}–${wordRange.max} words. Please revise the length to meet the task requirement.`;
+    } else {
+      report.taskUnderstanding.push({
+        requirement: `Write ${wordRange.min}–${wordRange.max} words`,
+        status: withinRange ? "Met" : "Needs attention",
+        evidence: `Server-calculated word count: ${wordCount}; required range: ${wordRange.min}–${wordRange.max} words.`,
+        explanation: withinRange
+          ? `The server counted ${wordCount} words, which is within the required range.`
+          : `The server counted ${wordCount} words, which is outside the required range. Please revise the length.`
+      });
+    }
+  }
+
   const wordNote = wordRange ? `Server-calculated word count: ${wordCount}; suggested range: ${wordRange.min}–${wordRange.max} words; ${wordCount >= wordRange.min && wordCount <= wordRange.max ? "within range" : "outside range"}. This is a separate note, not an automatic quality judgement.` : `Server-calculated word count: ${wordCount} words. This is a separate note, not an automatic quality judgement.`;
   return [
     "SG PRIMARY ENGLISH WRITING COACH — WRITING ASSESSMENT",
