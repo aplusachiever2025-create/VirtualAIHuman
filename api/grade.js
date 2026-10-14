@@ -46,7 +46,7 @@ async function askAgnes(messages, maxTokens = 2400) {
   return content.trim();
 }
 
-const ASSESSMENT_SECTIONS = ["taskUnderstanding","genuineErrors","strengths","improvementPriorities","revisionPractice","organisationAndTone"];
+const ASSESSMENT_SECTIONS = ["taskUnderstanding","genuineErrors","strengths","improvementPriorities","optionalSuggestions","revisionPractice","organisationAndTone"];
 
 function countEnglishWords(text) {
   return (String(text || "").match(/[A-Za-z0-9]+(?:['’][A-Za-z0-9]+)*/g) || []).length;
@@ -71,11 +71,11 @@ function parseAndValidateReport(raw, writingType, studentText, taskPrompt) {
   let report;
   try { report = JSON.parse(cleaned); } catch { throw new Error("Assessment 服务没有返回有效报告。请稍后重试。"); }
   if (!report || typeof report !== "object" || Array.isArray(report)) throw new Error("Assessment 报告结构无效。");
-  for (const key of ASSESSMENT_SECTIONS) if (!Array.isArray(report[key])) throw new Error("Assessment 报告缺少必要栏目：" + key);
+  for (const key of ASSESSMENT_SECTIONS) if (!Array.isArray(report[key])) throw new Error("Assessment 报告缺少必要栏目：" + key);\n  if (["score","scores","total","marks","band","percentage","rating"].some(key => Object.prototype.hasOwnProperty.call(report, key))) throw new Error("报告包含评分字段；本次未返回结果，请重试。");\n  if (report.taskUnderstanding.length > 15 || report.genuineErrors.length > 30 || report.strengths.length > 6 || report.improvementPriorities.length > 3 || report.optionalSuggestions.length > 3 || report.revisionPractice.length > 3 || report.organisationAndTone.length > 6) throw new Error("Assessment 报告内容超出合理范围。");
   const stringsOnly = arr => arr.every(x => typeof x === "string" && x.trim());
   if (!report.taskUnderstanding.every(x => x && typeof x.requirement === "string" && ["Met","Partly met","Needs attention","Not applicable"].includes(x.status) && typeof x.evidence === "string" && typeof x.explanation === "string")) throw new Error("任务要求诊断格式无效。");
   if (!report.genuineErrors.every(x => x && typeof x.original === "string" && typeof x.correction === "string" && typeof x.explanation === "string")) throw new Error("真实错误栏目格式无效。");
-  for (const key of ["strengths","improvementPriorities","revisionPractice","organisationAndTone"]) if (!stringsOnly(report[key])) throw new Error("Assessment 栏目格式无效：" + key);
+  for (const key of ["strengths","improvementPriorities","optionalSuggestions","revisionPractice","organisationAndTone"]) if (!stringsOnly(report[key])) throw new Error("Assessment 栏目格式无效：" + key);
   const wordCount = countEnglishWords(studentText), wordRange = getRequestedWordRange(taskPrompt);
   const wordNote = wordRange ? `Server-calculated word count: ${wordCount}; suggested range: ${wordRange.min}–${wordRange.max} words; ${wordCount >= wordRange.min && wordCount <= wordRange.max ? "within range" : "outside range"}. This is a separate note, not an automatic quality judgement.` : `Server-calculated word count: ${wordCount} words. This is a separate note, not an automatic quality judgement.`;
   return [
@@ -88,7 +88,7 @@ function parseAndValidateReport(raw, writingType, studentText, taskPrompt) {
     "", "3. WHAT THE STUDENT IS DOING WELL", ...(report.strengths.length ? report.strengths.map(x => "• " + x) : ["No specific strength was provided."]),
     "", "4. PRIORITIES FOR IMPROVEMENT (not necessarily errors)", ...(report.improvementPriorities.length ? report.improvementPriorities.map(x => "• " + x) : ["No major improvement priority identified."]),
     "", "5. ORGANISATION, FORMAT AND TONE", ...(report.organisationAndTone.length ? report.organisationAndTone.map(x => "• " + x) : ["No additional observations."]),
-    "", "6. TRY THIS YOURSELF", ...(report.revisionPractice.length ? report.revisionPractice.map((x,n) => `${n+1}. ${x}`) : ["Re-read the writing and revise one priority."]),
+    "", "7. TRY THIS YOURSELF", ...(report.revisionPractice.length ? report.revisionPractice.map((x,n) => `${n+1}. ${x}`) : ["Re-read the writing and revise one priority."]),
     "", "No marks or total score are assigned. The goal is to identify real issues and help the student improve."
   ].join("\n");
 }
@@ -116,15 +116,15 @@ module.exports = async function handler(req, res) {
 
     const system = `You are SG Primary English Writing Coach for Singapore primary English, ${grade}. This product performs WRITING ASSESSMENT for learning, NOT MARKING. Never assign marks, scores, bands, percentages or a total. Do not output scoring dimensions. Help the child identify real issues and improve, kindly and specifically.
 Writing type: ${writingType}. Assess only against the exact task and grade. Use evidence from the student's text.
-Return ONLY valid JSON: {"taskUnderstanding":[{"requirement":"string","status":"Met|Partly met|Needs attention|Not applicable","evidence":"short exact quote or empty string","explanation":"specific explanation"}],"genuineErrors":[{"original":"exact original span","correction":"corrected text","explanation":"simple explanation"}],"strengths":["specific evidenced strength"],"improvementPriorities":["actionable improvement; distinguish optional style suggestions from errors"],"organisationAndTone":["specific observation"],"revisionPractice":["small revision task or learning question"]}.
+Return ONLY valid JSON: {"taskUnderstanding":[{"requirement":"string","status":"Met|Partly met|Needs attention|Not applicable","evidence":"short exact quote or empty string","explanation":"specific explanation"}],"genuineErrors":[{"original":"exact original span","correction":"corrected text","explanation":"simple explanation"}],"strengths":["specific evidenced strength"],"improvementPriorities":["up to 3 genuine learning needs supported by evidence"],"optionalSuggestions":["up to 3 clearly optional enrichment ideas; never imply these are required or missing from the task"],"organisationAndTone":["specific observation"],"revisionPractice":["1–3 small revision tasks or learning questions"]}.
 Rules:
 - List explicit task requirements only. Situational Writing: check purpose, audience, format and every stated content point. Picture Composition: assess only visible/provided events. Continuous Writing: assess relevance, idea development, paragraphing, coherence and language.
 - genuineErrors contains only clear grammar, spelling or punctuation errors with exact original text, correction and reason. If none, return an empty array. Never invent errors or treat a style preference as an error.
 - strengths must cite specific effective choices from the writing.
-- Give at most 3 improvement priorities, ordered by learning value; clearly distinguish real errors from optional enrichment.
+- Give at most 3 genuine improvement priorities, ordered by learning value. Put optional extensions only in optionalSuggestions. Never suggest extra requirements (such as a rain plan) unless the task asks for them. Clearly state optional suggestions are not errors or missing requirements.
 - Provide 1–3 short revision tasks the child can attempt; do not write a complete replacement essay.
 - Word count is calculated by the server. Do not estimate it, call it an error or deduct marks. Suggested range is a separate note.
-- If no genuine errors are found, do not imply that grammar/spelling/punctuation errors are a problem.
+- If no genuine errors are found, do not imply that grammar/spelling/punctuation errors are a problem. Do not include any scoring fields in the JSON.
 - No marks, scores, bands, rubrics or numeric quality ratings. This is learning assessment, not an official MOE/SEAB judgement.`;
     const user = `Grade: ${grade}\nWriting type: ${writingType}\n\nEXACT TASK PROMPT AND REQUIREMENTS:\n${taskPrompt}\n\nSTUDENT RESPONSE:\n${studentText}\n\nAssess only against the task requirements above.`;
     const raw = await askAgnes([{ role: "system", content: system }, { role: "user", content: user }], 3000);
