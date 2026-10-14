@@ -63,12 +63,17 @@ module.exports = async function handler(req, res) {
     const studentText = String(body.studentText || "").trim();
 
     if (!["P4", "P5", "P6"].includes(grade)) return send(res, 400, { ok: false, error: "年级必须是 P4、P5 或 P6。" });
-    if (!["Situational Writing", "Picture Composition"].includes(writingType)) return send(res, 400, { ok: false, error: "不支持的写作类型。" });
+    if (!["Situational Writing", "Picture Composition", "Continuous Writing"].includes(writingType)) return send(res, 400, { ok: false, error: "不支持的写作类型。" });
     if (!taskPrompt || taskPrompt.length > 12000) return send(res, 400, { ok: false, error: "请填写题目；题目长度上限为 12,000 字符。" });
     if (!studentText || studentText.length > 20000) return send(res, 400, { ok: false, error: "请填写作文；作文长度上限为 20,000 字符。" });
 
     const system = `You are SG Primary English Writing Coach, an educational feedback assistant for Singapore Primary English, ${grade}. Writing type: ${writingType}.
 Use the exact task prompt supplied by the user; never invent additional requirements. Be supportive and age-appropriate.
+Use writing-type-specific educational assessment priorities:
+- For Picture Composition: assess use of relevant picture information, coherent narrative sequence, character/event development, relevant descriptive details and a fitting ending, alongside language accuracy. Do not require details that the prompt/images do not establish.
+- For Continuous Writing: assess relevance to the given topic or prompt, development of the main idea/story with relevant details, coherence and paragraphing, progression and ending where appropriate, vocabulary/sentence variety and language accuracy. Do not assume pictures are required.
+- For Situational Writing: assess each explicit content point, purpose and intended reader, suitability of format and tone, clarity and relevance, and language accuracy.
+These are project teaching priorities informed by the Singapore primary English curriculum, not a claim that MOE publishes one universal detailed rubric or identical marks for every school task. Adapt expectations to the stated grade and exact task.
 Return a structured report with these sections:
 1. Task fulfilment: list every explicit requirement from the task and label Fully addressed / Partially addressed / Missing. Quote evidence from the student's response.
 2. Genuine grammar and spelling errors: quote exact original words, provide a correction and a simple explanation. Do not label optional style preferences as errors.
