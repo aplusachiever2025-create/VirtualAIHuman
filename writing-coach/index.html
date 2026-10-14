@@ -12,6 +12,7 @@ html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{margin:0;background:linear-gradient(180deg,#eaf0ff 0,#f5f7fc 260px,var(--bg) 520px);color:var(--ink);font:16px/1.6 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 .wrap{max-width:820px;margin:0 auto;padding:26px 18px 48px}
 .top{position:relative;overflow:hidden;margin:0 0 20px;padding:24px 22px 22px;border-radius:26px;background:linear-gradient(135deg,#203d87 0%,#3159bd 55%,#6688e8 100%);color:#fff;box-shadow:0 16px 34px rgba(42,75,159,.2)}
+.brand{position:absolute;right:22px;top:20px;text-align:right;z-index:2;color:#fff;line-height:1.25}.brand-name{font-size:20px;font-weight:850;letter-spacing:.015em}.brand-tagline{font-size:10px;letter-spacing:.19em;font-weight:650;margin-top:5px;white-space:nowrap}
 .top:after{content:"";position:absolute;width:190px;height:190px;right:-60px;top:-78px;border:1px solid rgba(255,255,255,.18);border-radius:50%;box-shadow:0 0 0 24px rgba(255,255,255,.045),0 0 0 50px rgba(255,255,255,.035);pointer-events:none}
 .eyebrow{position:relative;z-index:1;display:inline-flex;align-items:center;padding:5px 10px;border:1px solid rgba(255,255,255,.24);border-radius:999px;background:rgba(255,255,255,.12);color:#f2f5ff;font-size:11px;font-weight:800;letter-spacing:.075em;text-transform:uppercase}
 h1{position:relative;z-index:1;font-size:clamp(25px,4vw,34px);line-height:1.2;letter-spacing:-.035em;margin:13px 0 9px;max-width:590px}
@@ -40,12 +41,12 @@ textarea::placeholder{color:#9aa5b8}
 .hidden{display:none!important}
 footer{font-size:11px;line-height:1.7;color:#7a879c;padding:8px 4px 0;overflow-wrap:anywhere}
 footer a{color:#3457ad;text-underline-offset:3px}
-@media(max-width:620px){body{background:linear-gradient(180deg,#eaf0ff 0,#f4f6fc 300px,var(--bg) 620px)}.wrap{padding:12px 12px 30px}.top{border-radius:23px;padding:21px 18px 20px;margin-bottom:14px}h1{font-size:27px;margin-top:12px}.lead{font-size:13px}.card{padding:17px 15px;border-radius:19px;margin:13px 0}.grid{grid-template-columns:1fr;gap:13px}textarea{min-height:135px}.actions{display:grid;grid-template-columns:1fr;gap:9px}.actions .btn{width:100%;min-height:50px}.status{padding:0 2px}#resultCard h2{font-size:19px}}
+@media(max-width:620px){.brand{right:16px;top:16px}.brand-name{font-size:15px}.brand-tagline{font-size:8px;letter-spacing:.12em}.top{padding-top:62px}body{background:linear-gradient(180deg,#eaf0ff 0,#f4f6fc 300px,var(--bg) 620px)}.wrap{padding:12px 12px 30px}.top{border-radius:23px;padding:21px 18px 20px;margin-bottom:14px}h1{font-size:27px;margin-top:12px}.lead{font-size:13px}.card{padding:17px 15px;border-radius:19px;margin:13px 0}.grid{grid-template-columns:1fr;gap:13px}textarea{min-height:135px}.actions{display:grid;grid-template-columns:1fr;gap:9px}.actions .btn{width:100%;min-height:50px}.status{padding:0 2px}#resultCard h2{font-size:19px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
 </style>
 </head>
 <body><main class="wrap">
-<header class="top"><div class="eyebrow">Singapore Primary English · P4–P6</div><h1>SG Primary English Writing Coach</h1><p class="lead">Singapore English writing assessment · Situational Writing, Picture Composition and Continuous Writing · Aplus AI</p></header>
+<header class="top"><div class="brand"><div class="brand-name">APLUS ACHIEVER</div><div class="brand-tagline">LEARN. IMPROVE. ACHIEVE</div></div><div class="eyebrow">Singapore Primary English · P4–P6</div><h1>SG Primary English Writing Coach</h1><p class="lead">Singapore English writing assessment · Situational Writing, Picture Composition and Continuous Writing · Aplus AI</p></header>
 <section class="card">
 <div class="notice">This is a standalone test page. AI marking requires a working Agnes connection. Any score is for guidance only and is not an official MOE/SEAB result. Do not enter a student’s full name, school or home address.</div>
 <div class="grid" style="margin-top:16px">
@@ -59,7 +60,7 @@ footer a{color:#3457ad;text-underline-offset:3px}
 <div class="actions"><button class="btn secondary" id="ocr">Recognise handwriting</button><button class="btn primary" id="gradeBtn">Mark my writing</button></div>
 <div class="status" id="status" role="status" aria-live="polite"></div>
 </section>
-<section class="card hidden" id="resultCard"><h2 style="margin-top:0">Assessment report</h2><div class="result" id="result"></div></section>
+<section class="card hidden" id="resultCard"><h2 style="margin-top:0">Marking Report</h2><div class="result" id="result"></div></section>
 <footer>Internal configuration: SG-EL-2026.1 (a project-defined version, not an official version). References: <a href="https://www.moe.gov.sg/-/media/files/primary/2020-english-language-primary.pdf" target="_blank" rel="noopener">MOE Primary English Language Syllabus 2020</a> · <a href="https://www.seab.gov.sg/psle/psle-formats-examined-in-2026/" target="_blank" rel="noopener">SEAB PSLE formats 2026</a>. The verification date will only be updated after the official documents have been checked.</footer>
 </main>
 <script>
