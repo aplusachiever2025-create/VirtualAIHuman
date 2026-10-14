@@ -118,6 +118,7 @@ function parseAndValidateReport(raw, writingType, studentText, taskPrompt) {
   }
 
   const outsideWordRange = Boolean(wordRange && (wordCount < wordRange.min || wordCount > wordRange.max));
+  const overWordLimit = Boolean(wordRange && wordCount > wordRange.max);
   if (outsideWordRange) {
     const rangeLabel = `${wordRange.min}–${wordRange.max} words`;
     const priority = `Word count: revise ${wordCount} words to fit the required ${rangeLabel}. Keep every required task point, but remove repetition and unnecessary wording rather than adding new details.`;
@@ -129,7 +130,9 @@ function parseAndValidateReport(raw, writingType, studentText, taskPrompt) {
       `Underline every required task point, then remove repeated ideas and unnecessary phrases until the writing fits ${rangeLabel}.`,
       `Check that all required points remain after editing; do not add new details while reducing the word count.`
     ];
-    report.optionalSuggestions = report.optionalSuggestions.filter(x => !/add|include|mention|expand|extra|another|more detail|one more/i.test(x));
+    if (overWordLimit) {
+      report.optionalSuggestions = report.optionalSuggestions.filter(x => !/add|include|mention|expand|extra|another|more detail|one more|vary|variety|variation|sentence opener|sentence starter|longer|elaborat|develop further/i.test(x));
+    }
   }
   const wordNote = wordRange ? `Server-calculated word count: ${wordCount}; suggested range: ${wordRange.min}–${wordRange.max} words; ${wordCount >= wordRange.min && wordCount <= wordRange.max ? "within range" : "outside range"}. This is a separate note, not an automatic quality judgement.` : `Server-calculated word count: ${wordCount} words. This is a separate note, not an automatic quality judgement.`;
   return [
@@ -141,7 +144,7 @@ function parseAndValidateReport(raw, writingType, studentText, taskPrompt) {
     ...(report.genuineErrors.length ? report.genuineErrors.map((x,n) => `${n+1}. “${x.original}” → “${x.correction}”\n   Why: ${x.explanation}`) : ["No clear grammar, spelling or punctuation errors identified. Do not invent errors."]),
     "", "3. WHAT THE STUDENT IS DOING WELL", ...(report.strengths.length ? report.strengths.map(x => "• " + x) : ["No specific strength was provided."]),
     "", "4. LEARNING PRIORITIES", ...(report.improvementPriorities.length ? report.improvementPriorities.map(x => "• " + x) : [outsideWordRange ? "Revise the length to meet the required word range while keeping every task point." : "No major learning priority identified from the submitted writing."]),
-    "", "5. OPTIONAL IDEAS (not errors or missing requirements)", ...(report.optionalSuggestions.length ? report.optionalSuggestions.map(x => "• " + x) : ["No optional extension suggested."]),
+    "", "5. OPTIONAL IDEAS (not errors or missing requirements)", ...(report.optionalSuggestions.length ? report.optionalSuggestions.map(x => "• " + x) : [overWordLimit ? "Focus on meeting the word limit before attempting optional improvements." : "No optional extension suggested."]),
     "These ideas are optional and are not task requirements.", "", "6. ORGANISATION, FORMAT AND TONE", ...(report.organisationAndTone.length ? report.organisationAndTone.map(x => "• " + x) : ["See the specific strengths above; no separate observation is needed."]),
     "", "7. TRY THIS YOURSELF", ...(report.revisionPractice.length ? report.revisionPractice.map((x,n) => `${n+1}. ${x}`) : ["Re-read the writing and revise one priority."]),
     "", "No marks or total score are assigned. The goal is to identify real issues and help the student improve."
