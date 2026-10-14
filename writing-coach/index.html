@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#3159bd">
-<title>SG Primary English Writing Coach</title>
+<title>SG Primary English Writing Assessment Coach</title>
 <style>
 :root{--bg:#f2f5fb;--card:#fff;--ink:#17233d;--muted:#68758d;--line:#e1e7f1;--accent:#3159bd;--soft:#edf2ff;--bad:#b42335;--shadow:0 12px 32px rgba(28,48,91,.075)}
 *{box-sizing:border-box}
@@ -46,9 +46,9 @@ footer a{color:#3457ad;text-underline-offset:3px}
 </style>
 </head>
 <body><main class="wrap">
-<header class="top"><div class="brand"><div class="brand-name">APLUS ACHIEVER</div><div class="brand-tagline">LEARN. IMPROVE. ACHIEVE</div></div><div class="eyebrow">Singapore Primary English · P4–P6</div><h1>SG Primary English Writing Coach</h1><p class="lead">Singapore English writing assessment · Situational Writing, Picture Composition and Continuous Writing · Aplus AI</p></header>
+<header class="top"><div class="brand"><div class="brand-name">APLUS ACHIEVER</div><div class="brand-tagline">LEARN. IMPROVE. ACHIEVE</div></div><div class="eyebrow">Singapore Primary English · P4–P6</div><h1>SG Primary English Writing Coach</h1><p class="lead">Find real writing issues, understand why they matter, and practise improving · Situational Writing, Picture Composition and Continuous Writing</p></header>
 <section class="card">
-<div class="notice">This is a standalone test page. AI marking requires a working Agnes connection. Any score is for guidance only and is not an official MOE/SEAB result. Do not enter a student’s full name, school or home address.</div>
+<div class="notice">Learning-focused writing assessment: identify genuine issues, explain strengths and practise revisions. The system does not assign marks. Do not enter a student’s full name, school or home address.</div>
 <div class="grid" style="margin-top:16px">
 <div><label for="grade">Grade</label><select id="grade"><option>P4</option><option selected>P5</option><option>P6</option></select></div>
 <div><label for="type">写作类型 Writing type</label><select id="type"><option>Situational Writing</option><option>Picture Composition</option><option>Continuous Writing</option></select></div>
@@ -57,15 +57,15 @@ footer a{color:#3457ad;text-underline-offset:3px}
 <div style="margin-top:12px"><label for="taskPhoto">Task and instructions photo (optional, 1 photo)</label><input id="taskPhoto" type="file" accept="image/png,image/jpeg,image/webp"><p class="small">Take or select one clear photo showing the full question and all instructions. Maximum file size: 2.5 MB.</p><div class="actions"><button class="btn secondary" id="taskOcr">Recognise task photo</button></div><div class="status" id="taskStatus" role="status" aria-live="polite"></div></div>
 <div style="margin-top:14px"><label for="essay">Student’s writing</label><textarea id="essay" placeholder="Type or paste the student’s writing here. If using a handwritten photo, recognise the text first and check it carefully."></textarea></div>
 <div style="margin-top:14px"><label for="photo">Handwritten writing photos (optional, up to 5)</label><input id="photo" type="file" accept="image/png,image/jpeg,image/webp" multiple><p class="small">Select 1–5 JPG, PNG or WebP photos, each no larger than 2.5 MB. Select them in page order. The system will recognise each page and combine the text.</p></div>
-<div class="actions"><button class="btn secondary" id="ocr">Recognise handwriting</button><button class="btn primary" id="gradeBtn">Get Assessment Report</button></div>
+<div class="actions"><button class="btn secondary" id="ocr">Recognise handwriting</button><button class="btn primary" id="gradeBtn">Assess My Writing</button></div>
 <div class="status" id="status" role="status" aria-live="polite"></div>
 </section>
-<section class="card hidden" id="resultCard"><h2 style="margin-top:0">Marking Report</h2><div class="result" id="result"></div></section>
-<footer>Internal configuration: SG-EL-2026.1 (a project-defined version, not an official version). References: <a href="https://www.moe.gov.sg/-/media/files/primary/2020-english-language-primary.pdf" target="_blank" rel="noopener">MOE Primary English Language Syllabus 2020</a> · <a href="https://www.seab.gov.sg/psle/psle-formats-examined-in-2026/" target="_blank" rel="noopener">SEAB PSLE formats 2026</a>. The verification date will only be updated after the official documents have been checked.</footer>
+<section class="card hidden" id="resultCard"><h2 style="margin-top:0">Writing Assessment</h2><div class="result" id="result"></div></section>
+<footer>Assessment mode: SG-WA-2026.1 (learning-focused; not an official MOE/SEAB mark). References: <a href="https://www.moe.gov.sg/-/media/files/primary/2020-english-language-primary.pdf" target="_blank" rel="noopener">MOE Primary English Language Syllabus 2020</a> · <a href="https://www.seab.gov.sg/psle/psle-formats-examined-in-2026/" target="_blank" rel="noopener">SEAB PSLE formats 2026</a>. The verification date will only be updated after the official documents have been checked.</footer>
 </main>
 <script>
 (() => {
-  const API_BASE_URL = "https://virtualaihuman.vercel.app";
+  const API_BASE_URL = window.location.origin;
   const $ = id => document.getElementById(id);
   const status = (message, error=false) => { $('status').textContent = message; $('status').className = 'status' + (error ? ' error' : ''); };
   async function callApi(path, body) {
@@ -110,7 +110,7 @@ footer a{color:#3457ad;text-underline-offset:3px}
     const task=$('task').value.trim(),essay=$('essay').value.trim();
     if(!task)return status('Please enter the full task and all instructions first.',true);
     if(!essay)return status('Please enter the writing, or upload a photo and recognise the text first.',true);
-    try{$('gradeBtn').disabled=true;status('Agnes AI is marking your writing. Please wait…');const data=await callApi('/api/grade',{grade:$('grade').value,writingType:$('type').value,taskPrompt:task,studentText:essay});$('result').textContent=data.result||'No assessment report was received.';$('resultCard').classList.remove('hidden');status('Marking is complete. Please note that any AI score in the report is not an official result.');$('resultCard').scrollIntoView({behavior:'smooth',block:'start'});}
+    try{$('gradeBtn').disabled=true;status('Assessing the writing and preparing learning feedback. Please wait…');const data=await callApi('/api/grade',{grade:$('grade').value,writingType:$('type').value,taskPrompt:task,studentText:essay});$('result').textContent=data.result||'No assessment report was received.';$('resultCard').classList.remove('hidden');status('Assessment complete. Review the feedback and try the revision tasks.');$('resultCard').scrollIntoView({behavior:'smooth',block:'start'});}
     catch(e){status(e.message||'Marking failed.',true);}finally{$('gradeBtn').disabled=false;}
   });
 })();
