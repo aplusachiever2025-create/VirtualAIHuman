@@ -131,7 +131,10 @@ function parseAndValidateReport(raw, writingType, studentText, taskPrompt) {
       `Check that all required points remain after editing; do not add new details while reducing the word count.`
     ];
     if (overWordLimit) {
-      report.optionalSuggestions = report.optionalSuggestions.filter(x => !/add|include|mention|expand|extra|another|more detail|one more|vary|variety|variation|sentence opener|sentence starter|longer|elaborat|develop further/i.test(x));
+      // Do not rely on keyword filtering: even advice to add a linking word can
+      // encourage the student to increase length. Prioritise trimming and defer
+      // all optional enrichment advice until the response is within range.
+      report.optionalSuggestions = [];
     }
   }
   const wordNote = wordRange ? `Server-calculated word count: ${wordCount}; suggested range: ${wordRange.min}–${wordRange.max} words; ${wordCount >= wordRange.min && wordCount <= wordRange.max ? "within range" : "outside range"}. This is a separate note, not an automatic quality judgement.` : `Server-calculated word count: ${wordCount} words. This is a separate note, not an automatic quality judgement.`;
