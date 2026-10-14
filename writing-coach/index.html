@@ -120,11 +120,11 @@ footer a{color:#3457ad;text-underline-offset:3px}
         const pageText = typeof data.text === 'string' ? data.text.trim() : '';
         if (!pageText) throw new Error(`第 ${i + 1} 张照片没有识别到文字。`);
         pages.push(pageText);
-        $(targetId).value = pages.join('\\n\\n');
+        $(targetId).value = pages.join('\n\n');
       }
       statusFn(`已完成 ${files.length} 张照片的识别。请检查文字，并补充图片中无法自动识别的内容。`);
     } catch (e) {
-      if (pages.length) $(targetId).value = pages.join('\\n\\n');
+      if (pages.length) $(targetId).value = pages.join('\n\n');
       statusFn((e.message || '识别失败。') + (pages.length ? ` 已保留前 ${pages.length} 张照片的识别结果。` : ''), true);
     } finally {
       $(buttonId).disabled = false;
