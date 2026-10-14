@@ -6,7 +6,7 @@ const ALLOWED_ORIGINS = new Set([
   "http://localhost:8000",
   "http://127.0.0.1:8000"
 ]);
-const RUBRIC_VERSION = "SG-EL-2026.3";
+const ASSESSMENT_VERSION = "SG-WA-2026.1";
 
 function setCors(req, res) {
   const origin = req.headers.origin || "";
@@ -46,11 +46,7 @@ async function askAgnes(messages, maxTokens = 2400) {
   return content.trim();
 }
 
-const RUBRIC_DIMENSIONS = {
-  "Situational Writing": [["Content points",8],["Purpose and reader",2],["Format and tone",2],["Language accuracy and expression",2]],
-  "Picture Composition": [["Relevant picture events and task relevance",8],["Story development and organisation",6],["Vocabulary and expression",4],["Grammar, spelling and punctuation",6]],
-  "Continuous Writing": [["Relevance and development of ideas",12],["Organisation and coherence",8],["Vocabulary and expression",6],["Grammar, spelling and punctuation",10]]
-};
+const ASSESSMENT_SECTIONS = ["taskUnderstanding","genuineErrors","strengths","improvementPriorities","revisionPractice","organisationAndTone"];
 
 function countEnglishWords(text) {
   return (String(text || "").match(/[A-Za-z0-9]+(?:['’][A-Za-z0-9]+)*/g) || []).length;
@@ -73,52 +69,29 @@ function getRequestedWordRange(taskPrompt) {
 function parseAndValidateReport(raw, writingType, studentText, taskPrompt) {
   const cleaned = raw.replace(/^\s*```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
   let report;
-  try { report = JSON.parse(cleaned); } catch { throw new Error("评分服务没有返回有效的结构化报告。为避免显示未经校验的分数，本次未返回评分；请稍后重试。"); }
-  if (!report || typeof report !== "object" || Array.isArray(report)) throw new Error("评分报告结构无效，本次未返回分数。");
-  const expected = RUBRIC_DIMENSIONS[writingType];
-  if (!Array.isArray(report.scores) || report.scores.length !== expected.length) throw new Error("评分维度不完整或有多余维度；本次未返回分数。");
-  let sum = 0;
-  for (let i = 0; i < expected.length; i++) {
-    const item = report.scores[i]; const [name, max] = expected[i];
-    if (!item || item.dimension !== name || item.max !== max || !Number.isInteger(item.score) || item.score < 0 || item.score > max || typeof item.reason !== "string" || !item.reason.trim()) throw new Error("评分维度、满分或分项分数未通过校验；本次未返回分数。");
-    sum += item.score;
-  }
-  const totalMax = writingType === "Situational Writing" ? 14 : writingType === "Continuous Writing" ? 36 : 24;
-  if (!Number.isInteger(report.total) || report.total !== sum || report.total < 0 || report.total > totalMax) throw new Error(`总分与分项分数不一致，或超过该写作类型的 ${totalMax} 分上限；本次未返回分数。`);
-  if (!Array.isArray(report.fulfilment) || !Array.isArray(report.errors) || !Array.isArray(report.strengths) || !Array.isArray(report.improvements) || !Array.isArray(report.organisationTone)) throw new Error("评分报告缺少必要栏目；本次未返回分数。");
-  const statuses = new Set(["Fully addressed", "Partially addressed", "Missing", "Not applicable"]);
-  for (const item of report.fulfilment) {
-    if (!item || typeof item.requirement !== "string" || !statuses.has(item.status) || typeof item.evidence !== "string" || typeof item.reason !== "string") throw new Error("题目要求核对栏目的结构无效；本次未返回分数。");
-  }
-  const stringsOnly = arr => arr.every(x => typeof x === "string");
-  if (!report.errors.every(x => x && typeof x.original === "string" && typeof x.correction === "string" && typeof x.explanation === "string") || !stringsOnly(report.strengths) || !stringsOnly(report.improvements) || !stringsOnly(report.organisationTone)) throw new Error("报告栏目格式无效；本次未返回分数。");
-  if (report.errors.length === 0) {
-    const languageDimension = writingType === "Situational Writing" ? "Language accuracy and expression" : "Grammar, spelling and punctuation";
-    const languageScore = report.scores.find(x => x.dimension === languageDimension);
-    if (languageScore && languageScore.score < languageScore.max &&
-        /(?:grammar|spelling|punctuation)\s+(?:errors?|mistakes?)|(?:errors?|mistakes?)\s+in\s+(?:grammar|spelling|punctuation)/i.test(languageScore.reason)) {
-      throw new Error("语言分数理由与“没有明确语言错误”的报告互相矛盾；本次未返回分数，请重试。");
-    }
-  }
-  const wordCount = countEnglishWords(studentText);
-  const wordRange = getRequestedWordRange(taskPrompt);
-  const wordCountLine = wordRange
-    ? `Word count (server-calculated): ${wordCount}; requested range: ${wordRange.min}–${wordRange.max} words; ${wordCount >= wordRange.min && wordCount <= wordRange.max ? "within range" : "outside range"}. Word count is reported separately and is not an automatic mark deduction.`
-    : `Word count (server-calculated): ${wordCount} words. Word count is reported separately and is not an automatic mark deduction unless the task explicitly makes it a scored requirement.`;
-  const lines = [
-    wordCountLine, "", "1. Task fulfilment",
-    ...(report.fulfilment.length ? report.fulfilment.map((x,i) => `${i+1}. [${x.status}] ${x.requirement}\n   Evidence: ${x.evidence || "—"}\n   Reason: ${x.reason}`) : ["No explicit requirements were listed by the model."]),
-    "", "2. Genuine grammar and spelling errors",
-    ...(report.errors.length ? report.errors.map((x,i) => `${i+1}. “${x.original}” → “${x.correction}”\n   ${x.explanation}`) : ["No clear grammar or spelling errors identified."]),
-    "", "3. Language strengths", ...(report.strengths.length ? report.strengths.map(x => `• ${x}`) : ["—"]),
-    "", "4. Optional improvements (not errors)", ...(report.improvements.length ? report.improvements.map(x => `• ${x}`) : ["—"]),
-    "", "5. Organisation, format and tone", ...(report.organisationTone.length ? report.organisationTone.map(x => `• ${x}`) : ["—"]),
-    "", "6. AI reference score (project rubric; not an official MOE/SEAB result)",
-    ...report.scores.map(x => `• ${x.dimension}: ${x.score}/${x.max} — ${x.reason}`),
-    `TOTAL: ${report.total}/${writingType === "Situational Writing" ? 14 : writingType === "Continuous Writing" ? 36 : 24}`, `Rubric version: ${RUBRIC_VERSION}`
-  ];
-  return lines.join("\n");
-};
+  try { report = JSON.parse(cleaned); } catch { throw new Error("Assessment 服务没有返回有效报告。请稍后重试。"); }
+  if (!report || typeof report !== "object" || Array.isArray(report)) throw new Error("Assessment 报告结构无效。");
+  for (const key of ASSESSMENT_SECTIONS) if (!Array.isArray(report[key])) throw new Error("Assessment 报告缺少必要栏目：" + key);
+  const stringsOnly = arr => arr.every(x => typeof x === "string" && x.trim());
+  if (!report.taskUnderstanding.every(x => x && typeof x.requirement === "string" && ["Met","Partly met","Needs attention","Not applicable"].includes(x.status) && typeof x.evidence === "string" && typeof x.explanation === "string")) throw new Error("任务要求诊断格式无效。");
+  if (!report.genuineErrors.every(x => x && typeof x.original === "string" && typeof x.correction === "string" && typeof x.explanation === "string")) throw new Error("真实错误栏目格式无效。");
+  for (const key of ["strengths","improvementPriorities","revisionPractice","organisationAndTone"]) if (!stringsOnly(report[key])) throw new Error("Assessment 栏目格式无效：" + key);
+  const wordCount = countEnglishWords(studentText), wordRange = getRequestedWordRange(taskPrompt);
+  const wordNote = wordRange ? `Server-calculated word count: ${wordCount}; suggested range: ${wordRange.min}–${wordRange.max} words; ${wordCount >= wordRange.min && wordCount <= wordRange.max ? "within range" : "outside range"}. This is a separate note, not an automatic quality judgement.` : `Server-calculated word count: ${wordCount} words. This is a separate note, not an automatic quality judgement.`;
+  return [
+    "SG PRIMARY ENGLISH WRITING COACH — WRITING ASSESSMENT",
+    `Writing type: ${writingType} | Assessment version: ${ASSESSMENT_VERSION}`,
+    wordNote, "", "1. TASK UNDERSTANDING",
+    ...(report.taskUnderstanding.length ? report.taskUnderstanding.map((x,n) => `${n+1}. [${x.status}] ${x.requirement}\n   Evidence: ${x.evidence || "—"}\n   Explanation: ${x.explanation}`) : ["No explicit task requirements were listed."]),
+    "", "2. GENUINE ERRORS (only clear errors)",
+    ...(report.genuineErrors.length ? report.genuineErrors.map((x,n) => `${n+1}. “${x.original}” → “${x.correction}”\n   Why: ${x.explanation}`) : ["No clear grammar, spelling or punctuation errors identified. Do not invent errors."]),
+    "", "3. WHAT THE STUDENT IS DOING WELL", ...(report.strengths.length ? report.strengths.map(x => "• " + x) : ["No specific strength was provided."]),
+    "", "4. PRIORITIES FOR IMPROVEMENT (not necessarily errors)", ...(report.improvementPriorities.length ? report.improvementPriorities.map(x => "• " + x) : ["No major improvement priority identified."]),
+    "", "5. ORGANISATION, FORMAT AND TONE", ...(report.organisationAndTone.length ? report.organisationAndTone.map(x => "• " + x) : ["No additional observations."]),
+    "", "6. TRY THIS YOURSELF", ...(report.revisionPractice.length ? report.revisionPractice.map((x,n) => `${n+1}. ${x}`) : ["Re-read the writing and revise one priority."]),
+    "", "No marks or total score are assigned. The goal is to identify real issues and help the student improve."
+  ].join("\n");
+}
 
 module.exports = async function handler(req, res) {
   setCors(req, res);
@@ -141,11 +114,22 @@ module.exports = async function handler(req, res) {
     if (!taskPrompt || taskPrompt.length > 12000) return send(res, 400, { ok: false, error: "请填写题目；题目长度上限为 12,000 字符。" });
     if (!studentText || studentText.length > 20000) return send(res, 400, { ok: false, error: "请填写作文；作文长度上限为 20,000 字符。" });
 
-    const system = `You are SG Primary English Writing Coach for Singapore primary English, ${grade}.\nReturn a structured report using the fixed project rubric below. This rubric is project-defined, not an official MOE/SEAB rubric. Use only the exact task supplied; do not invent requirements or details. Be supportive and age-appropriate.\n\nFIXED SCORING: use the exact total for the selected writing type; never switch scales. Situational Writing is 14 marks, Continuous Writing is 36 marks, and legacy Picture Composition remains a project-defined 24-mark scale. These are project-defined internal scoring dimensions and are NOT claimed to be official SEAB dimension-by-dimension mark allocations. Keep each dimension name and maximum exactly as listed:\nFor Situational Writing (14 total): Content points 8 (four explicit points scored 0–2 each; 0 missing/irrelevant, 1 partially addressed, 2 clear and sufficient); Purpose and reader 2 (0 unclear/not addressed, 1 partly clear, 2 clear and reader-appropriate); Format and tone 2 (0 unsuitable, 1 partly suitable, 2 suitable); Language accuracy and expression 2 (0 frequent errors or unclear expression, 1 generally understandable with limitations, 2 accurate and clear for grade).\nFor Picture Composition: Relevant picture events and task relevance 8 (0–2 major events missing/irrelevant, 3–4 some relevant events but important gaps, 5–6 main events covered with minor gaps, 7–8 relevant visible/prompted events covered accurately); Story development and organisation 6 (0–1 hard to follow, 2–3 basic sequence/weak links, 4–5 clear sequence and adequate development, 6 coherent well-paced story); Vocabulary and expression 4 (0 unclear, 1 limited, 2 suitable and understandable, 3 effective in places, 4 consistently effective for grade); Grammar, spelling and punctuation 6 (0–1 frequent errors impede meaning, 2–3 noticeable errors, 4–5 mostly accurate, 6 consistently accurate).\nFor Continuous Writing (36 total): Relevance and development of ideas 12 (0–3 off-topic/little development, 4–6 relevant but limited/uneven, 7–9 developed with supporting details, 10–12 focused and well-developed); Organisation and coherence 8 (0–2 hard to follow, 3–4 basic structure/weak links, 5–6 clear progression, 7–8 coherent purposeful structure); Vocabulary and expression 6 (0–1 unclear, 2–3 limited/basic, 4–5 effective in places, 6 consistently effective for grade); Grammar, spelling and punctuation 10 (0–2 frequent errors impede meaning, 3–5 noticeable errors, 6–8 mostly accurate, 9–10 consistently accurate).\n\nApply expectations appropriate to ${grade}; do not automatically apply P6 PSLE marks to P4/P5. For Situational Writing, assess each supplied content point separately. A request for permission must be judged in context of the whole message; do not require a fixed phrase if purpose is clear. For Picture Composition, never require details not shown or stated. For Continuous Writing, do not assume pictures or extra requirements.\nTask fulfilment: list every explicit requirement, label Fully addressed / Partially addressed / Missing / Not applicable, and quote short exact evidence. Do not penalise for details the task did not request.\nWord count: do not estimate the student response length. The server calculates the word count separately. Do not include word count as a task-fulfilment item and do not deduct marks solely because the response is outside a suggested word range; report the count and range separately. If the task explicitly requires a length, explain it as a separate compliance note, not an invented grammar error.\nErrors: list only genuine grammar, spelling or punctuation errors with exact original span, correction and simple explanation. Keep optional style suggestions separate and do not count them as errors. Do not deduct marks automatically for optional improvements. If errors is empty, do not claim that grammar/spelling/punctuation errors caused a language-score deduction. Every score reason must explain the awarded mark using evidence; if language marks are withheld for expression or clarity rather than a genuine error, state that distinction explicitly.\nReturn ONLY valid JSON, with no markdown fences or text outside JSON, matching this schema exactly: {"fulfilment":[{"requirement":"string","status":"Fully addressed|Partially addressed|Missing|Not applicable","evidence":"short exact quote or empty string","reason":"string"}],"errors":[{"original":"exact original span","correction":"correction","explanation":"simple explanation"}],"strengths":["string"],"improvements":["string"],"organisationTone":["string"],"scores":[{"dimension":"exact dimension name listed for this writing type","score":0,"max":0,"reason":"brief evidence-based reason"}],"total":0}. Include every score dimension exactly once and no extra dimensions. Scores and max must be integers. The total must equal the sum of score values and the maximum for the selected type. For Situational Writing, use exactly: Content points (8), Purpose and reader (2), Format and tone (2), Language accuracy and expression (2), total 14. For Picture Composition, use exactly: Relevant picture events and task relevance (8), Story development and organisation (6), Vocabulary and expression (4), Grammar, spelling and punctuation (6), total 24. For Continuous Writing, use exactly: Relevance and development of ideas (12), Organisation and coherence (8), Vocabulary and expression (6), Grammar, spelling and punctuation (10), total 36. Do not add a score dimension for each content point; discuss content points in fulfilment. Configuration version: ${RUBRIC_VERSION}. This is a project reference score, not an official MOE/SEAB result. Do not add a score dimension for each content point; discuss content points in fulfilment. Configuration version: ${RUBRIC_VERSION}. This is a project reference score, not an official MOE/SEAB result.`;
+    const system = `You are SG Primary English Writing Coach for Singapore primary English, ${grade}. This product performs WRITING ASSESSMENT for learning, NOT MARKING. Never assign marks, scores, bands, percentages or a total. Do not output scoring dimensions. Help the child identify real issues and improve, kindly and specifically.
+Writing type: ${writingType}. Assess only against the exact task and grade. Use evidence from the student's text.
+Return ONLY valid JSON: {"taskUnderstanding":[{"requirement":"string","status":"Met|Partly met|Needs attention|Not applicable","evidence":"short exact quote or empty string","explanation":"specific explanation"}],"genuineErrors":[{"original":"exact original span","correction":"corrected text","explanation":"simple explanation"}],"strengths":["specific evidenced strength"],"improvementPriorities":["actionable improvement; distinguish optional style suggestions from errors"],"organisationAndTone":["specific observation"],"revisionPractice":["small revision task or learning question"]}.
+Rules:
+- List explicit task requirements only. Situational Writing: check purpose, audience, format and every stated content point. Picture Composition: assess only visible/provided events. Continuous Writing: assess relevance, idea development, paragraphing, coherence and language.
+- genuineErrors contains only clear grammar, spelling or punctuation errors with exact original text, correction and reason. If none, return an empty array. Never invent errors or treat a style preference as an error.
+- strengths must cite specific effective choices from the writing.
+- Give at most 3 improvement priorities, ordered by learning value; clearly distinguish real errors from optional enrichment.
+- Provide 1–3 short revision tasks the child can attempt; do not write a complete replacement essay.
+- Word count is calculated by the server. Do not estimate it, call it an error or deduct marks. Suggested range is a separate note.
+- If no genuine errors are found, do not imply that grammar/spelling/punctuation errors are a problem.
+- No marks, scores, bands, rubrics or numeric quality ratings. This is learning assessment, not an official MOE/SEAB judgement.`;
     const user = `Grade: ${grade}\nWriting type: ${writingType}\n\nEXACT TASK PROMPT AND REQUIREMENTS:\n${taskPrompt}\n\nSTUDENT RESPONSE:\n${studentText}\n\nAssess only against the task requirements above.`;
     const raw = await askAgnes([{ role: "system", content: system }, { role: "user", content: user }], 3000);
     const result = parseAndValidateReport(raw, writingType, studentText, taskPrompt);
-    return send(res, 200, { ok: true, result, rubricVersion: RUBRIC_VERSION, model: MODEL });
+    return send(res, 200, { ok: true, result, assessmentVersion: ASSESSMENT_VERSION, model: MODEL });
   } catch (error) {
     return send(res, 502, { ok: false, error: error instanceof Error ? error.message.slice(0, 400) : "服务器处理失败。" });
   }
