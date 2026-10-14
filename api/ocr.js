@@ -62,11 +62,14 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ ok: false, error: "请提供有效的 JPG、PNG 或 WebP 图片。" });
     }
     if (imageDataUrl.length > 3_500_000) return res.status(413).json({ ok: false, error: "照片太大，请压缩至约 2.5 MB 以下后重试。" });
-    const prompt = "Transcribe the English handwriting in this image exactly as written. Preserve original spelling, grammar, punctuation, paragraph breaks, and apparent mistakes. Do not correct, rewrite, grade, or improve the student's writing. If a word is unreadable, use [unclear]. Return only the transcription. This is likely a Singapore primary school English composition.";
+    const purpose = body.purpose === "task" ? "task" : "essay";
+    const prompt = purpose === "task"
+      ? "Read this photograph of a Singapore primary school English writing task or worksheet. Transcribe all visible printed and handwritten instructions exactly, including the writing topic, scenario, audience, bullet points, numbered content requirements, labels and captions. Preserve the order and structure using line breaks and numbered/bulleted lists where possible. Do not answer the task or invent missing text. If a word is unreadable, write [unclear]. If the page contains picture prompts or visual information that cannot be transcribed as text, add a brief clearly labelled note describing only the visible relevant details; do not guess the intended story. Return the transcription and any visual note only."
+      : "Transcribe the English handwriting in this image exactly as written. Preserve original spelling, grammar, punctuation, paragraph breaks, and apparent mistakes. Do not correct, rewrite, grade, or improve the student's writing. If a word is unreadable, use [unclear]. Return only the transcription. This is likely a Singapore primary school English composition.";
     const text = await askAgnes([{ role: "user", content: [
       { type: "text", text: prompt },
       { type: "image_url", image_url: { url: imageDataUrl } }
-    ] }], 2200);
+    ] }], 3000);
     return res.status(200).json({ ok: true, text });
   } catch (error) {
     return res.status(502).json({ ok: false, error: error instanceof Error ? error.message.slice(0, 400) : "服务器处理失败。" });
