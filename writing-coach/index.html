@@ -20,7 +20,7 @@
 </div>
 <div style="margin-top:14px"><label for="task">题目与所有指定要求 Task prompt</label><textarea id="task" placeholder="请粘贴完整题目、图片说明及所有指定内容点。"></textarea><p class="small">情境写作请务必提供完整题目及每一个指定内容点。</p></div>
 <div style="margin-top:14px"><label for="essay">学生作文 Student response</label><textarea id="essay" placeholder="在这里输入或粘贴学生作文。若使用手写照片，请先上传并核对识别文字。"></textarea></div>
-<div style="margin-top:14px"><label for="photo">手写作文照片（可选）</label><input id="photo" type="file" accept="image/png,image/jpeg,image/webp"><p class="small">上传后会先进行文字识别；请检查并修正识别结果，再点击批改。</p></div>
+<div style="margin-top:14px"><label for="photo">手写作文照片（可选）</label><input id="photo" type="file" accept="image/png,image/jpeg,image/webp"><p class="small">建议图片不超过 2.5 MB。上传后会先进行文字识别；请检查并修正识别结果，再点击批改。</p></div>
 <div class="actions"><button class="btn secondary" id="ocr">识别手写文字</button><button class="btn primary" id="gradeBtn">开始 AI 批改</button></div>
 <div class="status" id="status" role="status" aria-live="polite"></div>
 </section>
@@ -29,14 +29,13 @@
 </main>
 <script>
 (() => {
-  // After deploying the companion Agnes Worker, replace this value with its HTTPS base URL.
-  // Example shape: https://your-worker.your-subdomain.workers.dev
-  const API_BASE_URL = "PASTE_CLOUDFLARE_WORKER_URL_HERE";
+  // Set this to the HTTPS origin of the deployed Vercel project, without a trailing path.
+  const API_BASE_URL = "PASTE_VERCEL_API_URL_HERE";
   const $ = id => document.getElementById(id);
   const status = (message, error=false) => { $('status').textContent = message; $('status').className = 'status' + (error ? ' error' : ''); };
   async function callApi(path, body) {
     if (!API_BASE_URL.startsWith('https://') || API_BASE_URL.includes('PASTE_')) {
-      throw new Error('后端尚未连接。需要先部署 Agnes Worker 并填写它的 HTTPS 地址。');
+      throw new Error('后端尚未连接。需要先部署 Vercel API，并填写它的 HTTPS 地址。');
     }
     const response = await fetch(API_BASE_URL.replace(/\/$/, '') + path, {
       method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
@@ -49,7 +48,7 @@
     return new Promise((resolve,reject) => {
       if (!file) return reject(new Error('请先选择一张照片。'));
       if (!['image/jpeg','image/png','image/webp'].includes(file.type)) return reject(new Error('请使用 JPG、PNG 或 WebP 图片。'));
-      if (file.size > 5 * 1024 * 1024) return reject(new Error('照片大于 5 MB，请先压缩后再上传。'));
+      if (file.size > 2.5 * 1024 * 1024) return reject(new Error('照片大于 2.5 MB，请先压缩后再上传。'));
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
       reader.onerror = () => reject(new Error('无法读取这张照片。'));
