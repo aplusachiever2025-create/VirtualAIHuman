@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -45,22 +45,22 @@ footer a{color:#3457ad;text-underline-offset:3px}
 </style>
 </head>
 <body><main class="wrap">
-<header class="top"><div class="eyebrow">Singapore Primary English · P4–P6</div><h1>SG Primary English Writing Coach</h1><p class="lead">英文作文批改 · 情境写作、看图作文与连续写作 · Agnes AI</p></header>
+<header class="top"><div class="eyebrow">Singapore Primary English · P4–P6</div><h1>SG Primary English Writing Coach</h1><p class="lead">Singapore English writing assessment · Situational Writing, Picture Composition and Continuous Writing · Agnes AI</p></header>
 <section class="card">
-<div class="notice">这是独立测试页面。连接 Agnes 后才会产生真实批改；AI 参考分数不是官方 MOE/SEAB 成绩。请勿输入学生全名、学校、住址等个人资料。</div>
+<div class="notice">This is a standalone test page. AI marking requires a working Agnes connection. Any score is for guidance only and is not an official MOE/SEAB result. Do not enter a student’s full name, school or home address.</div>
 <div class="grid" style="margin-top:16px">
-<div><label for="grade">年级 Grade</label><select id="grade"><option>P4</option><option selected>P5</option><option>P6</option></select></div>
+<div><label for="grade">Grade</label><select id="grade"><option>P4</option><option selected>P5</option><option>P6</option></select></div>
 <div><label for="type">写作类型 Writing type</label><select id="type"><option>Situational Writing</option><option>Picture Composition</option><option>Continuous Writing</option></select></div>
 </div>
-<div style="margin-top:14px"><label for="task">题目与所有指定要求 Task prompt</label><textarea id="task" placeholder="可以直接输入题目，也可以在下方拍照上传题目与指定要求。"></textarea><p class="small">情境写作请提供完整题目和所有指定内容点。也可以拍下题目纸，系统会先识别文字；识别后请检查，并补充图片中无法转成文字的要求。</p></div>
-<div style="margin-top:12px"><label for="taskPhoto">题目与指定要求照片（可选，1 张）</label><input id="taskPhoto" type="file" accept="image/png,image/jpeg,image/webp"><p class="small">用手机拍摄或选择一张清晰的题目照片，尽量让题目和所有指定要求完整入镜；照片不超过 2.5 MB。</p><div class="actions"><button class="btn secondary" id="taskOcr">识别题目照片</button></div><div class="status" id="taskStatus" role="status" aria-live="polite"></div></div>
-<div style="margin-top:14px"><label for="essay">学生作文 Student response</label><textarea id="essay" placeholder="在这里输入或粘贴学生作文。若使用手写照片，请先上传并核对识别文字。"></textarea></div>
-<div style="margin-top:14px"><label for="photo">手写作文照片（可选，最多 5 张）</label><input id="photo" type="file" accept="image/png,image/jpeg,image/webp" multiple><p class="small">可一次选择 1–5 张 JPG、PNG 或 WebP 照片，每张不超过 2.5 MB。请按作文页码顺序选择；系统会逐张识别并合并文字。</p></div>
-<div class="actions"><button class="btn secondary" id="ocr">识别手写文字</button><button class="btn primary" id="gradeBtn">开始 AI 批改</button></div>
+<div style="margin-top:14px"><label for="task">Task prompt and all instructions</label><textarea id="task" placeholder="Type the task here, or upload a photo of the question and instructions below."></textarea><p class="small">For Situational Writing, include the full task and every required content point. You can also upload a photo for text recognition. Check the recognised text and add any instructions that could not be captured.</p></div>
+<div style="margin-top:12px"><label for="taskPhoto">Task and instructions photo (optional, 1 photo)</label><input id="taskPhoto" type="file" accept="image/png,image/jpeg,image/webp"><p class="small">Take or select one clear photo showing the full question and all instructions. Maximum file size: 2.5 MB.</p><div class="actions"><button class="btn secondary" id="taskOcr">Recognise task photo</button></div><div class="status" id="taskStatus" role="status" aria-live="polite"></div></div>
+<div style="margin-top:14px"><label for="essay">Student’s writing</label><textarea id="essay" placeholder="Type or paste the student’s writing here. If using a handwritten photo, recognise the text first and check it carefully."></textarea></div>
+<div style="margin-top:14px"><label for="photo">Handwritten writing photos (optional, up to 5)</label><input id="photo" type="file" accept="image/png,image/jpeg,image/webp" multiple><p class="small">Select 1–5 JPG, PNG or WebP photos, each no larger than 2.5 MB. Select them in page order. The system will recognise each page and combine the text.</p></div>
+<div class="actions"><button class="btn secondary" id="ocr">Recognise handwriting</button><button class="btn primary" id="gradeBtn">Mark my writing</button></div>
 <div class="status" id="status" role="status" aria-live="polite"></div>
 </section>
-<section class="card hidden" id="resultCard"><h2 style="margin-top:0">批改报告 Assessment report</h2><div class="result" id="result"></div></section>
-<footer>内部配置版本：SG-EL-2026.1（本项目自定义版本，不是官方版本）。官方参考：<a href="https://www.moe.gov.sg/-/media/files/primary/2020-english-language-primary.pdf" target="_blank" rel="noopener">MOE Primary English Language Syllabus 2020</a> · <a href="https://www.seab.gov.sg/psle/psle-formats-examined-in-2026/" target="_blank" rel="noopener">SEAB PSLE formats 2026</a>. 只有在实际核验官方文件后才更新核验日期。</footer>
+<section class="card hidden" id="resultCard"><h2 style="margin-top:0">Assessment report</h2><div class="result" id="result"></div></section>
+<footer>Internal configuration: SG-EL-2026.1 (a project-defined version, not an official version). References: <a href="https://www.moe.gov.sg/-/media/files/primary/2020-english-language-primary.pdf" target="_blank" rel="noopener">MOE Primary English Language Syllabus 2020</a> · <a href="https://www.seab.gov.sg/psle/psle-formats-examined-in-2026/" target="_blank" rel="noopener">SEAB PSLE formats 2026</a>. The verification date will only be updated after the official documents have been checked.</footer>
 </main>
 <script>
 (() => {
@@ -68,7 +68,7 @@ footer a{color:#3457ad;text-underline-offset:3px}
   const $ = id => document.getElementById(id);
   const status = (message, error=false) => { $('status').textContent = message; $('status').className = 'status' + (error ? ' error' : ''); };
   async function callApi(path, body) {
-    if (!API_BASE_URL.startsWith('https://') || API_BASE_URL.includes('PASTE_')) throw new Error('后端尚未连接。需要先部署 Vercel API，并填写它的 HTTPS 地址。');
+    if (!API_BASE_URL.startsWith('https://') || API_BASE_URL.includes('PASTE_')) throw new Error('The backend is not connected. Deploy the Vercel API and enter its HTTPS URL first.');
     const response = await fetch(API_BASE_URL.replace(/\/$/, '') + path, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.ok) throw new Error(data.error || ('请求失败：HTTP ' + response.status));
@@ -76,41 +76,41 @@ footer a{color:#3457ad;text-underline-offset:3px}
   }
   function imageDataUrl(file) {
     return new Promise((resolve,reject) => {
-      if (!file) return reject(new Error('请先选择一张照片。'));
-      if (!['image/jpeg','image/png','image/webp'].includes(file.type)) return reject(new Error('请使用 JPG、PNG 或 WebP 图片。'));
-      if (file.size > 2.5 * 1024 * 1024) return reject(new Error('照片大于 2.5 MB，请先压缩后再上传。'));
-      const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = () => reject(new Error('无法读取这张照片。')); reader.readAsDataURL(file);
+      if (!file) return reject(new Error('Please select a photo first.'));
+      if (!['image/jpeg','image/png','image/webp'].includes(file.type)) return reject(new Error('Please use a JPG, PNG or WebP image.'));
+      if (file.size > 2.5 * 1024 * 1024) return reject(new Error('This photo is larger than 2.5 MB. Please compress it before uploading.'));
+      const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = () => reject(new Error('Could not read this photo.')); reader.readAsDataURL(file);
     });
   }
   async function recognizePhotos(inputId,targetId,statusFn,purpose,buttonId) {
     const files = Array.from($(inputId).files || []);
-    if (!files.length) return statusFn('请先选择照片。',true);
-    if (files.length > (purpose === 'task' ? 1 : 5)) return statusFn(purpose === 'task' ? '题目与指定要求只能选择 1 张照片。' : '一次最多选择 5 张照片。',true);
+    if (!files.length) return statusFn('Please select a photo first.',true);
+    if (files.length > (purpose === 'task' ? 1 : 5)) return statusFn(purpose === 'task' ? 'You can select only 1 task photo.' : 'You can select up to 5 photos at a time.',true);
     $(buttonId).disabled = true; $('gradeBtn').disabled = true; $('ocr').disabled = true; $('taskOcr').disabled = true;
     const pages = [];
     try {
       for (let i=0;i<files.length;i++) {
-        statusFn(`正在识别照片，请稍候…`);
+        statusFn(`Recognising photo. Please wait…`);
         const dataUrl = await imageDataUrl(files[i]);
         const data = await callApi('/api/ocr',{imageDataUrl:dataUrl,grade:$('grade').value,purpose});
         const pageText = typeof data.text === 'string' ? data.text.trim() : '';
-        if (!pageText) throw new Error('照片没有识别到文字。');
+        if (!pageText) throw new Error('No text was recognised in the photo.');
         pages.push(pageText); $(targetId).value = pages.join('\n\n');
       }
-      statusFn('照片识别完成。请检查文字，并补充图片中无法自动识别的内容。');
+      statusFn('Photo recognition is complete. Check the text and add any content that was not recognised.');
     } catch(e) {
       if (pages.length) $(targetId).value = pages.join('\n\n');
-      statusFn((e.message || '识别失败。') + (pages.length ? ' 已保留已识别的文字。' : ''),true);
+      statusFn((e.message || 'Recognition failed.') + (pages.length ? ' Previously recognised text has been kept.' : ''),true);
     } finally { $(buttonId).disabled=false; $('ocr').disabled=false; $('taskOcr').disabled=false; $('gradeBtn').disabled=false; }
   }
   $('ocr').addEventListener('click',() => recognizePhotos('photo','essay',status,'essay','ocr'));
   $('taskOcr').addEventListener('click',() => recognizePhotos('taskPhoto','task',(message,error=false)=>{$('taskStatus').textContent=message;$('taskStatus').className='status'+(error?' error':'');},'task','taskOcr'));
   $('gradeBtn').addEventListener('click',async()=>{
     const task=$('task').value.trim(),essay=$('essay').value.trim();
-    if(!task)return status('请先填写完整题目和指定要求。',true);
-    if(!essay)return status('请先输入作文，或上传照片并完成文字识别。',true);
-    try{$('gradeBtn').disabled=true;status('Agnes AI 正在批改，请稍候…');const data=await callApi('/api/grade',{grade:$('grade').value,writingType:$('type').value,taskPrompt:task,studentText:essay});$('result').textContent=data.result||'没有收到批改内容。';$('resultCard').classList.remove('hidden');status('批改完成。请注意报告中的 AI 参考分数不是官方成绩。');$('resultCard').scrollIntoView({behavior:'smooth',block:'start'});}
-    catch(e){status(e.message||'批改失败。',true);}finally{$('gradeBtn').disabled=false;}
+    if(!task)return status('Please enter the full task and all instructions first.',true);
+    if(!essay)return status('Please enter the writing, or upload a photo and recognise the text first.',true);
+    try{$('gradeBtn').disabled=true;status('Agnes AI is marking your writing. Please wait…');const data=await callApi('/api/grade',{grade:$('grade').value,writingType:$('type').value,taskPrompt:task,studentText:essay});$('result').textContent=data.result||'No assessment report was received.';$('resultCard').classList.remove('hidden');status('Marking is complete. Please note that any AI score in the report is not an official result.');$('resultCard').scrollIntoView({behavior:'smooth',block:'start'});}
+    catch(e){status(e.message||'Marking failed.',true);}finally{$('gradeBtn').disabled=false;}
   });
 })();
 </script>
