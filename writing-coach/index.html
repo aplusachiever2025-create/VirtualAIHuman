@@ -20,7 +20,7 @@
 </div>
 <div style="margin-top:14px"><label for="task">题目与所有指定要求 Task prompt</label><textarea id="task" placeholder="请粘贴完整题目、图片说明及所有指定内容点。"></textarea><p class="small">情境写作请务必提供完整题目及每一个指定内容点。</p></div>
 <div style="margin-top:14px"><label for="essay">学生作文 Student response</label><textarea id="essay" placeholder="在这里输入或粘贴学生作文。若使用手写照片，请先上传并核对识别文字。"></textarea></div>
-<div style="margin-top:14px"><label for="photo">手写作文照片（可选）</label><input id="photo" type="file" accept="image/png,image/jpeg,image/webp"><p class="small">建议图片不超过 2.5 MB。上传后会先进行文字识别；请检查并修正识别结果，再点击批改。</p></div>
+<div style="margin-top:14px"><label for="photo">手写作文照片（可选，最多 5 张）</label><input id="photo" type="file" accept="image/png,image/jpeg,image/webp" multiple><p class="small">可一次选择 1–5 张 JPG、PNG 或 WebP 照片，每张不超过 2.5 MB。请按作文页码顺序选择；系统会逐张识别并合并文字。</p></div>
 <div class="actions"><button class="btn secondary" id="ocr">识别手写文字</button><button class="btn primary" id="gradeBtn">开始 AI 批改</button></div>
 <div class="status" id="status" role="status" aria-live="polite"></div>
 </section>
@@ -56,15 +56,31 @@
     });
   }
   $('ocr').addEventListener('click', async () => {
+    const files = Array.from($('photo').files || []);
+    if (!files.length) return status('请先选择作文照片。', true);
+    if (files.length > 5) return status('一次最多选择 5 张照片。', true);
+    $('ocr').disabled = true;
+    $('gradeBtn').disabled = true;
+    const pages = [];
     try {
-      const file = $('photo').files[0];
-      const dataUrl = await imageDataUrl(file);
-      $('ocr').disabled = true; status('正在识别手写文字…');
-      const data = await callApi('/api/ocr', {imageDataUrl:dataUrl, grade:$('grade').value});
-      $('essay').value = data.text || '';
-      status('识别完成。请先逐字核对并修正作文，再点击“开始 AI 批改”。');
-    } catch (e) { status(e.message || '识别失败。', true); }
-    finally { $('ocr').disabled = false; }
+      for (let i = 0; i < files.length; i++) {
+        status(`正在识别第 ${i + 1} / ${files.length} 页，请稍候…`);
+        const dataUrl = await imageDataUrl(files[i]);
+        const data = await callApi('/api/ocr', {imageDataUrl:dataUrl, grade:$('grade').value});
+        const pageText = typeof data.text === 'string' ? data.text.trim() : '';
+        if (!pageText) throw new Error(`第 ${i + 1} 页没有识别到文字。`);
+        pages.push(pageText);
+        // Keep already recognized pages if a later page fails.
+        $('essay').value = pages.join('\n\n');
+      }
+      status(`已完成 ${files.length} 张照片的识别。请检查合并后的全文，确认页序和文字无误后再批改。`);
+    } catch (e) {
+      if (pages.length) $('essay').value = pages.join('\n\n');
+      status((e.message || '识别失败。') + (pages.length ? ` 已保留前 ${pages.length} 页的识别结果；请检查后重新识别剩余页面。` : ''), true);
+    } finally {
+      $('ocr').disabled = false;
+      $('gradeBtn').disabled = false;
+    }
   });
   $('gradeBtn').addEventListener('click', async () => {
     const task = $('task').value.trim(), essay = $('essay').value.trim();
