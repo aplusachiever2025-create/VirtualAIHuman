@@ -40,20 +40,7 @@ textarea::placeholder{color:#9aa5b8}
 .hidden{display:none!important}
 footer{font-size:11px;line-height:1.7;color:#7a879c;padding:8px 4px 0;overflow-wrap:anywhere}
 footer a{color:#3457ad;text-underline-offset:3px}
-@media(max-width:620px){
- body{background:linear-gradient(180deg,#eaf0ff 0,#f4f6fc 300px,var(--bg) 620px)}
- .wrap{padding:12px 12px 30px}
- .top{border-radius:23px;padding:21px 18px 20px;margin-bottom:14px}
- h1{font-size:27px;margin-top:12px}
- .lead{font-size:13px}
- .card{padding:17px 15px;border-radius:19px;margin:13px 0}
- .grid{grid-template-columns:1fr;gap:13px}
- textarea{min-height:135px}
- .actions{display:grid;grid-template-columns:1fr;gap:9px}
- .actions .btn{width:100%;min-height:50px}
- .status{padding:0 2px}
- #resultCard h2{font-size:19px}
-}
+@media(max-width:620px){body{background:linear-gradient(180deg,#eaf0ff 0,#f4f6fc 300px,var(--bg) 620px)}.wrap{padding:12px 12px 30px}.top{border-radius:23px;padding:21px 18px 20px;margin-bottom:14px}h1{font-size:27px;margin-top:12px}.lead{font-size:13px}.card{padding:17px 15px;border-radius:19px;margin:13px 0}.grid{grid-template-columns:1fr;gap:13px}textarea{min-height:135px}.actions{display:grid;grid-template-columns:1fr;gap:9px}.actions .btn{width:100%;min-height:50px}.status{padding:0 2px}#resultCard h2{font-size:19px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
 </style>
 </head>
@@ -66,7 +53,7 @@ footer a{color:#3457ad;text-underline-offset:3px}
 <div><label for="type">写作类型 Writing type</label><select id="type"><option>Situational Writing</option><option>Picture Composition</option><option>Continuous Writing</option></select></div>
 </div>
 <div style="margin-top:14px"><label for="task">题目与所有指定要求 Task prompt</label><textarea id="task" placeholder="可以直接输入题目，也可以在下方拍照上传题目与指定要求。"></textarea><p class="small">情境写作请提供完整题目和所有指定内容点。也可以拍下题目纸，系统会先识别文字；识别后请检查，并补充图片中无法转成文字的要求。</p></div>
-<div style="margin-top:12px"><label for="taskPhoto">题目与指定要求照片（可选，最多 5 张）</label><input id="taskPhoto" type="file" accept="image/png,image/jpeg,image/webp" multiple><p class="small">用手机拍摄或选择题目纸、写作提示及内容要求照片。请按页码顺序选择；每张不超过 2.5 MB。</p><div class="actions"><button class="btn secondary" id="taskOcr">识别题目照片</button></div><div class="status" id="taskStatus" role="status" aria-live="polite"></div></div>
+<div style="margin-top:12px"><label for="taskPhoto">题目与指定要求照片（可选，1 张）</label><input id="taskPhoto" type="file" accept="image/png,image/jpeg,image/webp"><p class="small">用手机拍摄或选择一张清晰的题目照片，尽量让题目和所有指定要求完整入镜；照片不超过 2.5 MB。</p><div class="actions"><button class="btn secondary" id="taskOcr">识别题目照片</button></div><div class="status" id="taskStatus" role="status" aria-live="polite"></div></div>
 <div style="margin-top:14px"><label for="essay">学生作文 Student response</label><textarea id="essay" placeholder="在这里输入或粘贴学生作文。若使用手写照片，请先上传并核对识别文字。"></textarea></div>
 <div style="margin-top:14px"><label for="photo">手写作文照片（可选，最多 5 张）</label><input id="photo" type="file" accept="image/png,image/jpeg,image/webp" multiple><p class="small">可一次选择 1–5 张 JPG、PNG 或 WebP 照片，每张不超过 2.5 MB。请按作文页码顺序选择；系统会逐张识别并合并文字。</p></div>
 <div class="actions"><button class="btn secondary" id="ocr">识别手写文字</button><button class="btn primary" id="gradeBtn">开始 AI 批改</button></div>
@@ -77,17 +64,12 @@ footer a{color:#3457ad;text-underline-offset:3px}
 </main>
 <script>
 (() => {
-  // Set this to the HTTPS origin of the deployed Vercel project, without a trailing path.
   const API_BASE_URL = "https://virtualaihuman.vercel.app";
   const $ = id => document.getElementById(id);
   const status = (message, error=false) => { $('status').textContent = message; $('status').className = 'status' + (error ? ' error' : ''); };
   async function callApi(path, body) {
-    if (!API_BASE_URL.startsWith('https://') || API_BASE_URL.includes('PASTE_')) {
-      throw new Error('后端尚未连接。需要先部署 Vercel API，并填写它的 HTTPS 地址。');
-    }
-    const response = await fetch(API_BASE_URL.replace(/\/$/, '') + path, {
-      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
-    });
+    if (!API_BASE_URL.startsWith('https://') || API_BASE_URL.includes('PASTE_')) throw new Error('后端尚未连接。需要先部署 Vercel API，并填写它的 HTTPS 地址。');
+    const response = await fetch(API_BASE_URL.replace(/\/$/, '') + path, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.ok) throw new Error(data.error || ('请求失败：HTTP ' + response.status));
     return data;
@@ -97,60 +79,38 @@ footer a{color:#3457ad;text-underline-offset:3px}
       if (!file) return reject(new Error('请先选择一张照片。'));
       if (!['image/jpeg','image/png','image/webp'].includes(file.type)) return reject(new Error('请使用 JPG、PNG 或 WebP 图片。'));
       if (file.size > 2.5 * 1024 * 1024) return reject(new Error('照片大于 2.5 MB，请先压缩后再上传。'));
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(new Error('无法读取这张照片。'));
-      reader.readAsDataURL(file);
+      const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = () => reject(new Error('无法读取这张照片。')); reader.readAsDataURL(file);
     });
   }
-  async function recognizePhotos(inputId, targetId, statusFn, purpose, buttonId) {
+  async function recognizePhotos(inputId,targetId,statusFn,purpose,buttonId) {
     const files = Array.from($(inputId).files || []);
-    if (!files.length) return statusFn('请先选择照片。', true);
-    if (files.length > 5) return statusFn('一次最多选择 5 张照片。', true);
-    $(buttonId).disabled = true;
-    $('gradeBtn').disabled = true;
-    $('ocr').disabled = true;
-    $('taskOcr').disabled = true;
+    if (!files.length) return statusFn('请先选择照片。',true);
+    if (files.length > (purpose === 'task' ? 1 : 5)) return statusFn(purpose === 'task' ? '题目与指定要求只能选择 1 张照片。' : '一次最多选择 5 张照片。',true);
+    $(buttonId).disabled = true; $('gradeBtn').disabled = true; $('ocr').disabled = true; $('taskOcr').disabled = true;
     const pages = [];
     try {
-      for (let i = 0; i < files.length; i++) {
-        statusFn(`正在识别第 ${i + 1} / ${files.length} 张照片，请稍候…`);
+      for (let i=0;i<files.length;i++) {
+        statusFn(`正在识别照片，请稍候…`);
         const dataUrl = await imageDataUrl(files[i]);
-        const data = await callApi('/api/ocr', {imageDataUrl:dataUrl, grade:$('grade').value, purpose});
+        const data = await callApi('/api/ocr',{imageDataUrl:dataUrl,grade:$('grade').value,purpose});
         const pageText = typeof data.text === 'string' ? data.text.trim() : '';
-        if (!pageText) throw new Error(`第 ${i + 1} 张照片没有识别到文字。`);
-        pages.push(pageText);
-        $(targetId).value = pages.join('\n\n');
+        if (!pageText) throw new Error('照片没有识别到文字。');
+        pages.push(pageText); $(targetId).value = pages.join('\n\n');
       }
-      statusFn(`已完成 ${files.length} 张照片的识别。请检查文字，并补充图片中无法自动识别的内容。`);
-    } catch (e) {
+      statusFn('照片识别完成。请检查文字，并补充图片中无法自动识别的内容。');
+    } catch(e) {
       if (pages.length) $(targetId).value = pages.join('\n\n');
-      statusFn((e.message || '识别失败。') + (pages.length ? ` 已保留前 ${pages.length} 张照片的识别结果。` : ''), true);
-    } finally {
-      $(buttonId).disabled = false;
-      $('ocr').disabled = false;
-      $('taskOcr').disabled = false;
-      $('gradeBtn').disabled = false;
-    }
+      statusFn((e.message || '识别失败。') + (pages.length ? ' 已保留已识别的文字。' : ''),true);
+    } finally { $(buttonId).disabled=false; $('ocr').disabled=false; $('taskOcr').disabled=false; $('gradeBtn').disabled=false; }
   }
-  $('ocr').addEventListener('click', () => recognizePhotos('photo', 'essay', status, 'essay', 'ocr'));
-  $('taskOcr').addEventListener('click', () => recognizePhotos('taskPhoto', 'task', (message, error=false) => {
-    $('taskStatus').textContent = message;
-    $('taskStatus').className = 'status' + (error ? ' error' : '');
-  }, 'task', 'taskOcr'));
-  $('gradeBtn').addEventListener('click', async () => {
-    const task = $('task').value.trim(), essay = $('essay').value.trim();
-    if (!task) return status('请先填写完整题目和指定要求。', true);
-    if (!essay) return status('请先输入作文，或上传照片并完成文字识别。', true);
-    try {
-      $('gradeBtn').disabled = true; status('Agnes AI 正在批改，请稍候…');
-      const data = await callApi('/api/grade', {grade:$('grade').value, writingType:$('type').value, taskPrompt:task, studentText:essay});
-      $('result').textContent = data.result || '没有收到批改内容。';
-      $('resultCard').classList.remove('hidden');
-      status('批改完成。请注意报告中的 AI 参考分数不是官方成绩。');
-      $('resultCard').scrollIntoView({behavior:'smooth',block:'start'});
-    } catch (e) { status(e.message || '批改失败。', true); }
-    finally { $('gradeBtn').disabled = false; }
+  $('ocr').addEventListener('click',() => recognizePhotos('photo','essay',status,'essay','ocr'));
+  $('taskOcr').addEventListener('click',() => recognizePhotos('taskPhoto','task',(message,error=false)=>{$('taskStatus').textContent=message;$('taskStatus').className='status'+(error?' error':'');},'task','taskOcr'));
+  $('gradeBtn').addEventListener('click',async()=>{
+    const task=$('task').value.trim(),essay=$('essay').value.trim();
+    if(!task)return status('请先填写完整题目和指定要求。',true);
+    if(!essay)return status('请先输入作文，或上传照片并完成文字识别。',true);
+    try{$('gradeBtn').disabled=true;status('Agnes AI 正在批改，请稍候…');const data=await callApi('/api/grade',{grade:$('grade').value,writingType:$('type').value,taskPrompt:task,studentText:essay});$('result').textContent=data.result||'没有收到批改内容。';$('resultCard').classList.remove('hidden');status('批改完成。请注意报告中的 AI 参考分数不是官方成绩。');$('resultCard').scrollIntoView({behavior:'smooth',block:'start'});}
+    catch(e){status(e.message||'批改失败。',true);}finally{$('gradeBtn').disabled=false;}
   });
 })();
 </script>
