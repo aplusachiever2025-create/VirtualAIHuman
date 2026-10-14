@@ -1,0 +1,7 @@
+name = "sg-primary-english-writing-coach"
+main = "src/index.js"
+compatibility_date = "2026-10-14"
+workers_dev = true
+
+# Set AGNES_API_KEY as a Worker secret in the Cloudflare dashboard.
+# Never place the key in this file or in the frontend.
