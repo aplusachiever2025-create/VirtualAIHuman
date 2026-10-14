@@ -36,7 +36,7 @@ async function askAgnes(messages, maxTokens = 6000) {
   const content = typeof rawContent === "string"
     ? rawContent
     : Array.isArray(rawContent)
-      ? rawContent.map(part => typeof part?.text === "string" ? part.text : "").join("\\n")
+      ? rawContent.map(part => typeof part?.text === "string" ? part.text : "").join("\n")
       : "";
   if (!content.trim()) {
     const finish = typeof choice?.finish_reason === "string" ? choice.finish_reason : "unknown";
