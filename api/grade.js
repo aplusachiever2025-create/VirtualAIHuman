@@ -83,7 +83,8 @@ function parseAndValidateReport(raw, writingType, studentText, taskPrompt) {
     if (!item || item.dimension !== name || item.max !== max || !Number.isInteger(item.score) || item.score < 0 || item.score > max || typeof item.reason !== "string" || !item.reason.trim()) throw new Error("评分维度、满分或分项分数未通过校验；本次未返回分数。");
     sum += item.score;
   }
-  const totalMax = writingType === "Situational Writing" ? 14 : writingType === "Continuous Writing" ? 36 : 24;\n  if (!Number.isInteger(report.total) || report.total !== sum || report.total < 0 || report.total > totalMax) throw new Error(`总分与分项分数不一致，或超过该写作类型的 ${totalMax} 分上限；本次未返回分数。`);
+  const totalMax = writingType === "Situational Writing" ? 14 : writingType === "Continuous Writing" ? 36 : 24;
+  if (!Number.isInteger(report.total) || report.total !== sum || report.total < 0 || report.total > totalMax) throw new Error(`总分与分项分数不一致，或超过该写作类型的 ${totalMax} 分上限；本次未返回分数。`);
   if (!Array.isArray(report.fulfilment) || !Array.isArray(report.errors) || !Array.isArray(report.strengths) || !Array.isArray(report.improvements) || !Array.isArray(report.organisationTone)) throw new Error("评分报告缺少必要栏目；本次未返回分数。");
   const statuses = new Set(["Fully addressed", "Partially addressed", "Missing", "Not applicable"]);
   for (const item of report.fulfilment) {
