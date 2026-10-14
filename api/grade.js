@@ -71,7 +71,16 @@ function parseAndValidateReport(raw, writingType, studentText, taskPrompt) {
   let report;
   try { report = JSON.parse(cleaned); } catch { throw new Error("Assessment 服务没有返回有效报告。请稍后重试。"); }
   if (!report || typeof report !== "object" || Array.isArray(report)) throw new Error("Assessment 报告结构无效。");
-  for (const key of ASSESSMENT_SECTIONS) if (!Array.isArray(report[key])) throw new Error("Assessment 报告缺少必要栏目：" + key);
+  // The model may occasionally omit an optional section. Keep the report usable by
+  // normalising missing optional arrays to empty arrays; still require core diagnosis.
+  for (const key of ASSESSMENT_SECTIONS) {
+    if (!Array.isArray(report[key])) {
+      if (key === "taskUnderstanding" || key === "genuineErrors") {
+        throw new Error("Assessment 报告缺少必要栏目：" + key);
+      }
+      report[key] = [];
+    }
+  }
   if (["score","scores","total","marks","band","percentage","rating"].some(key => Object.prototype.hasOwnProperty.call(report, key))) throw new Error("报告包含评分字段；本次未返回结果，请重试。");
   if (report.taskUnderstanding.length > 15 || report.genuineErrors.length > 30 || report.strengths.length > 6 || report.improvementPriorities.length > 3 || report.optionalSuggestions.length > 3 || report.revisionPractice.length > 3 || report.organisationAndTone.length > 6) throw new Error("Assessment 报告内容超出合理范围。");
   const stringsOnly = arr => arr.every(x => typeof x === "string" && x.trim());
