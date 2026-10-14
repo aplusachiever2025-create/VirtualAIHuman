@@ -1,6 +1,7 @@
 const AGNES_ENDPOINT = "https://apihub.agnes-ai.com/v1/chat/completions";
 const MODEL = "agnes-2.5-flash";
 const ALLOWED_ORIGINS = new Set([
+  "https://virtualaihuman.vercel.app",
   "https://aplusachiever2025-create.github.io",
   "http://localhost:8000",
   "http://127.0.0.1:8000"
