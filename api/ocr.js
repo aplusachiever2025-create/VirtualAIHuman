@@ -18,7 +18,7 @@ function setCors(req, res) {
   res.setHeader("Cache-Control", "no-store");
 }
 
-async function askAgnes(messages, maxTokens = 2200) {
+async function askAgnes(messages, maxTokens = 6000) {
   const key = process.env.AGNES_API_KEY;
   if (!key) throw new Error("服务器尚未设置 AGNES_API_KEY 环境变量。");
   const response = await fetch(AGNES_ENDPOINT, {
@@ -31,8 +31,20 @@ async function askAgnes(messages, maxTokens = 2200) {
     const message = typeof data?.error?.message === "string" ? data.error.message.slice(0, 250) : `Agnes API returned HTTP ${response.status}`;
     throw new Error(message);
   }
-  const content = data?.choices?.[0]?.message?.content;
-  if (typeof content !== "string" || !content.trim()) throw new Error("Agnes API 没有返回可用文字。");
+  const choice = data?.choices?.[0];
+  const rawContent = choice?.message?.content;
+  const content = typeof rawContent === "string"
+    ? rawContent
+    : Array.isArray(rawContent)
+      ? rawContent.map(part => typeof part?.text === "string" ? part.text : "").join("\\n")
+      : "";
+  if (!content.trim()) {
+    const finish = typeof choice?.finish_reason === "string" ? choice.finish_reason : "unknown";
+    const hasReasoning = Boolean(choice?.message?.reasoning_content);
+    throw new Error(
+      `Agnes 已响应，但没有可用识别文字（finish_reason=${finish}${hasReasoning ? "；模型只返回了推理内容" : ""}）。请重试；若再次发生，请查看 Vercel 的 /api/ocr 运行日志。`
+    );
+  }
   return content.trim();
 }
 
