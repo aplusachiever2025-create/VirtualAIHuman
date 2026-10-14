@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f5f7fb">
+<title>SG Primary English Writing Coach</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--ink:#172033;--muted:#637087;--line:#dfe5ef;--accent:#3156a6;--soft:#eaf0ff;--bad:#a33a35}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}.wrap{max-width:900px;margin:auto;padding:24px 16px 48px}.top{margin-bottom:18px}.eyebrow{color:var(--accent);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}h1{font-size:clamp(25px,4vw,34px);line-height:1.2;margin:6px 0 8px}.lead{color:var(--muted);margin:0}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;margin:14px 0;box-shadow:0 8px 24px #18284b08}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{display:block;font-weight:700;font-size:14px;margin:0 0 6px}input,select,textarea{width:100%;border:1px solid #cfd7e5;border-radius:10px;padding:11px 12px;font:inherit;background:#fff;color:var(--ink)}textarea{min-height:130px;resize:vertical}.small{font-size:13px;color:var(--muted)}.btn{border:0;border-radius:10px;padding:11px 16px;font:inherit;font-weight:700;cursor:pointer}.primary{background:var(--accent);color:#fff}.secondary{background:var(--soft);color:var(--accent)}.btn:disabled{opacity:.55;cursor:not-allowed}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.status{min-height:22px;margin-top:10px;font-size:14px;color:var(--muted)}.status.error{color:var(--bad)}.result{white-space:pre-wrap;overflow-wrap:anywhere}.notice{background:#fff7e6;border:1px solid #f1d9a8;border-radius:12px;padding:12px;font-size:13px;color:#6d5422}.hidden{display:none!important}footer{font-size:12px;color:var(--muted);padding:4px 2px 0} @media(max-width:620px){.wrap{padding:16px 10px 32px}.card{padding:15px}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main class="wrap">
+<header class="top"><div class="eyebrow">Singapore Primary English · P4–P6</div><h1>SG Primary English Writing Coach</h1><p class="lead">英文作文批改 · 情境写作与看图作文 · Agnes AI</p></header>
+<section class="card">
+<div class="notice">这是独立测试页面。连接 Agnes 后才会产生真实批改；AI 参考分数不是官方 MOE/SEAB 成绩。请勿输入学生全名、学校、住址等个人资料。</div>
+<div class="grid" style="margin-top:16px">
+<div><label for="grade">年级 Grade</label><select id="grade"><option>P4</option><option selected>P5</option><option>P6</option></select></div>
+<div><label for="type">写作类型 Writing type</label><select id="type"><option>Situational Writing</option><option>Picture Composition</option></select></div>
+</div>
+<div style="margin-top:14px"><label for="task">题目与所有指定要求 Task prompt</label><textarea id="task" placeholder="请粘贴完整题目、图片说明及所有指定内容点。"></textarea><p class="small">情境写作请务必提供完整题目及每一个指定内容点。</p></div>
+<div style="margin-top:14px"><label for="essay">学生作文 Student response</label><textarea id="essay" placeholder="在这里输入或粘贴学生作文。若使用手写照片，请先上传并核对识别文字。"></textarea></div>
+<div style="margin-top:14px"><label for="photo">手写作文照片（可选）</label><input id="photo" type="file" accept="image/png,image/jpeg,image/webp"><p class="small">上传后会先进行文字识别；请检查并修正识别结果，再点击批改。</p></div>
+<div class="actions"><button class="btn secondary" id="ocr">识别手写文字</button><button class="btn primary" id="gradeBtn">开始 AI 批改</button></div>
+<div class="status" id="status" role="status" aria-live="polite"></div>
+</section>
+<section class="card hidden" id="resultCard"><h2 style="margin-top:0">批改报告 Assessment report</h2><div class="result" id="result"></div></section>
+<footer>内部配置版本：SG-EL-2026.1（本项目自定义版本，不是官方版本）。官方参考：<a href="https://www.moe.gov.sg/-/media/files/primary/2020-english-language-primary.pdf" target="_blank" rel="noopener">MOE Primary English Language Syllabus 2020</a> · <a href="https://www.seab.gov.sg/psle/psle-formats-examined-in-2026/" target="_blank" rel="noopener">SEAB PSLE formats 2026</a>. 只有在实际核验官方文件后才更新核验日期。</footer>
+</main>
+<script>
+(() => {
+  // After deploying the companion Agnes Worker, replace this value with its HTTPS base URL.
+  // Example shape: https://your-worker.your-subdomain.workers.dev
+  const API_BASE_URL = "PASTE_CLOUDFLARE_WORKER_URL_HERE";
+  const $ = id => document.getElementById(id);
+  const status = (message, error=false) => { $('status').textContent = message; $('status').className = 'status' + (error ? ' error' : ''); };
+  async function callApi(path, body) {
+    if (!API_BASE_URL.startsWith('https://') || API_BASE_URL.includes('PASTE_')) {
+      throw new Error('后端尚未连接。需要先部署 Agnes Worker 并填写它的 HTTPS 地址。');
+    }
+    const response = await fetch(API_BASE_URL.replace(/\/$/, '') + path, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok) throw new Error(data.error || ('请求失败：HTTP ' + response.status));
+    return data;
+  }
+  function imageDataUrl(file) {
+    return new Promise((resolve,reject) => {
+      if (!file) return reject(new Error('请先选择一张照片。'));
+      if (!['image/jpeg','image/png','image/webp'].includes(file.type)) return reject(new Error('请使用 JPG、PNG 或 WebP 图片。'));
+      if (file.size > 5 * 1024 * 1024) return reject(new Error('照片大于 5 MB，请先压缩后再上传。'));
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('无法读取这张照片。'));
+      reader.readAsDataURL(file);
+    });
+  }
+  $('ocr').addEventListener('click', async () => {
+    try {
+      const file = $('photo').files[0];
+      const dataUrl = await imageDataUrl(file);
+      $('ocr').disabled = true; status('正在识别手写文字…');
+      const data = await callApi('/api/ocr', {imageDataUrl:dataUrl, grade:$('grade').value});
+      $('essay').value = data.text || '';
+      status('识别完成。请先逐字核对并修正作文，再点击“开始 AI 批改”。');
+    } catch (e) { status(e.message || '识别失败。', true); }
+    finally { $('ocr').disabled = false; }
+  });
+  $('gradeBtn').addEventListener('click', async () => {
+    const task = $('task').value.trim(), essay = $('essay').value.trim();
+    if (!task) return status('请先填写完整题目和指定要求。', true);
+    if (!essay) return status('请先输入作文，或上传照片并完成文字识别。', true);
+    try {
+      $('gradeBtn').disabled = true; status('Agnes AI 正在批改，请稍候…');
+      const data = await callApi('/api/grade', {grade:$('grade').value, writingType:$('type').value, taskPrompt:task, studentText:essay});
+      $('result').textContent = data.result || '没有收到批改内容。';
+      $('resultCard').classList.remove('hidden');
+      status('批改完成。请注意报告中的 AI 参考分数不是官方成绩。');
+      $('resultCard').scrollIntoView({behavior:'smooth',block:'start'});
+    } catch (e) { status(e.message || '批改失败。', true); }
+    finally { $('gradeBtn').disabled = false; }
+  });
+})();
+</script>
+</body></html>
