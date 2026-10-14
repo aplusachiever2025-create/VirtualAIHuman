@@ -58,8 +58,8 @@ function countEnglishWords(text) {
 function getRequestedWordRange(taskPrompt) {
   const text = String(taskPrompt || "");
   const patterns = [
-    /(?:suggested|recommended|target)?\\s*(?:word\\s*count|length)[^\\n.]{0,50}?(\\d{2,3})\\s*[-–—]\\s*(\\d{2,3})\\s*words?/i,
-    /(?:suggested|recommended|write|length)[^\\n.]{0,35}?(\\d{2,3})\\s*[-–—]\\s*(\\d{2,3})\\s*words?/i
+    /(?:suggested|recommended|target)?\s*(?:word\s*count|length)[^\n.]{0,50}?(\d{2,3})\s*[-–—]\s*(\d{2,3})\s*words?/i,
+    /(?:suggested|recommended|write|length)[^\n.]{0,35}?(\d{2,3})\s*[-–—]\s*(\d{2,3})\s*words?/i
   ];
   for (const pattern of patterns) {
     const match = text.match(pattern);
@@ -95,7 +95,7 @@ function parseAndValidateReport(raw, writingType, studentText, taskPrompt) {
     const languageDimension = writingType === "Situational Writing" ? "Language accuracy and expression" : "Grammar, spelling and punctuation";
     const languageScore = report.scores.find(x => x.dimension === languageDimension);
     if (languageScore && languageScore.score < languageScore.max &&
-        /(?:grammar|spelling|punctuation)\\s+(?:errors?|mistakes?)|(?:errors?|mistakes?)\\s+in\\s+(?:grammar|spelling|punctuation)/i.test(languageScore.reason)) {
+        /(?:grammar|spelling|punctuation)\s+(?:errors?|mistakes?)|(?:errors?|mistakes?)\s+in\s+(?:grammar|spelling|punctuation)/i.test(languageScore.reason)) {
       throw new Error("语言分数理由与“没有明确语言错误”的报告互相矛盾；本次未返回分数，请重试。");
     }
   }
