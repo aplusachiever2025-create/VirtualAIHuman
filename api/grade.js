@@ -88,8 +88,9 @@ function parseAndValidateReport(raw, writingType, studentText, taskPrompt) {
     "", "2. GENUINE ERRORS (only clear errors)",
     ...(report.genuineErrors.length ? report.genuineErrors.map((x,n) => `${n+1}. “${x.original}” → “${x.correction}”\n   Why: ${x.explanation}`) : ["No clear grammar, spelling or punctuation errors identified. Do not invent errors."]),
     "", "3. WHAT THE STUDENT IS DOING WELL", ...(report.strengths.length ? report.strengths.map(x => "• " + x) : ["No specific strength was provided."]),
-    "", "4. PRIORITIES FOR IMPROVEMENT (not necessarily errors)", ...(report.improvementPriorities.length ? report.improvementPriorities.map(x => "• " + x) : ["No major improvement priority identified."]),
-    "", "5. ORGANISATION, FORMAT AND TONE", ...(report.organisationAndTone.length ? report.organisationAndTone.map(x => "• " + x) : ["No additional observations."]),
+    "", "4. LEARNING PRIORITIES", ...(report.improvementPriorities.length ? report.improvementPriorities.map(x => "• " + x) : ["No major learning priority identified from the submitted writing."]),
+    "", "5. OPTIONAL IDEAS (not errors or missing requirements)", ...(report.optionalSuggestions.length ? report.optionalSuggestions.map(x => "• " + x) : ["No optional extension suggested."]),
+    "These ideas are optional and are not task requirements.", "", "6. ORGANISATION, FORMAT AND TONE", ...(report.organisationAndTone.length ? report.organisationAndTone.map(x => "• " + x) : ["No additional observations."]),
     "", "7. TRY THIS YOURSELF", ...(report.revisionPractice.length ? report.revisionPractice.map((x,n) => `${n+1}. ${x}`) : ["Re-read the writing and revise one priority."]),
     "", "No marks or total score are assigned. The goal is to identify real issues and help the student improve."
   ].join("\n");
