@@ -89,7 +89,27 @@ function parseAndValidateReport(raw, writingType, studentText, taskPrompt) {
   if (["score","scores","total","marks","band","percentage","rating"].some(key => Object.prototype.hasOwnProperty.call(report, key))) throw new Error("报告包含评分字段；本次未返回结果，请重试。");
   if (report.taskUnderstanding.length > 15 || report.genuineErrors.length > 30 || report.strengths.length > 6 || report.improvementPriorities.length > 3 || report.optionalSuggestions.length > 3 || report.revisionPractice.length > 3 || report.organisationAndTone.length > 6) throw new Error("Assessment 报告内容超出合理范围。");
   const stringsOnly = arr => arr.every(x => typeof x === "string" && x.trim());
-  if (!report.taskUnderstanding.every(x => x && typeof x.requirement === "string" && ["Met","Partly met","Needs attention","Not applicable"].includes(x.status) && typeof x.evidence === "string" && typeof x.explanation === "string")) throw new Error("任务要求诊断格式无效。");
+  // Normalise common equivalent model outputs without changing the assessment criteria.
+  const validTaskStatuses = new Set(["Met", "Partly met", "Needs attention", "Not applicable"]);
+  const normaliseTaskStatus = value => {
+    const status = String(value || "").trim().toLowerCase().replace(/[._-]+/g, " ").replace(/\\s+/g, " ");
+    if (["met", "fully met", "achieved", "yes", "满足", "已满足"].includes(status)) return "Met";
+    if (["partly met", "partially met", "partially achieved", "partially", "部分满足"].includes(status)) return "Partly met";
+    if (["needs attention", "not met", "unmet", "not achieved", "no", "未满足", "需改进"].includes(status)) return "Needs attention";
+    if (["not applicable", "n/a", "na", "不适用"].includes(status)) return "Not applicable";
+    return value;
+  };
+  report.taskUnderstanding = report.taskUnderstanding.map(item => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return item;
+    return {
+      ...item,
+      requirement: item.requirement ?? item.taskRequirement ?? item.criterion ?? item.taskPoint,
+      status: normaliseTaskStatus(item.status ?? item.result ?? item.completionStatus),
+      evidence: typeof item.evidence === "string" ? item.evidence : (typeof item.quote === "string" ? item.quote : ""),
+      explanation: typeof item.explanation === "string" ? item.explanation : (typeof item.reason === "string" ? item.reason : "")
+    };
+  });
+  if (!report.taskUnderstanding.every(x => x && typeof x.requirement === "string" && validTaskStatuses.has(x.status) && typeof x.evidence === "string" && typeof x.explanation === "string")) throw new Error("任务要求诊断格式无效。");
   if (!report.genuineErrors.every(x => x && typeof x.original === "string" && typeof x.correction === "string" && typeof x.explanation === "string")) throw new Error("真实错误栏目格式无效。");
   for (const key of ["strengths","improvementPriorities","optionalSuggestions","revisionPractice","organisationAndTone"]) if (!stringsOnly(report[key])) throw new Error("Assessment 栏目格式无效：" + key);
 
