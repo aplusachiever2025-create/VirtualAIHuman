@@ -1,5 +1,5 @@
-const CACHE_NAME = 'writing-coach-shell-v1';
-const SHELL_URLS = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
+const CACHE_NAME = 'magic-writing-coach-shell-v2';
+const SHELL_URLS = ['./', './index.html', './manifest.webmanifest', './icon.svg?v=magic-writing-coach-1'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -31,4 +31,3 @@ self.addEventListener('fetch', event => {
   }
   event.respondWith(caches.match(request).then(cached => cached || fetch(request)));
 });
-
