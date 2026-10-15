@@ -43,7 +43,20 @@ footer{font-size:11px;line-height:1.7;color:#7a879c;padding:8px 4px 0;overflow-w
 footer a{color:#3457ad;text-underline-offset:3px}
 @media(max-width:620px){.brand{right:16px;top:16px}.brand-name{font-size:15px}.brand-tagline{font-size:8px;letter-spacing:.12em}.top{padding-top:62px}body{background:linear-gradient(180deg,#eaf0ff 0,#f4f6fc 300px,var(--bg) 620px)}.wrap{padding:12px 12px 30px}.top{border-radius:23px;padding:21px 18px 20px;margin-bottom:14px}h1{font-size:27px;margin-top:12px}.lead{font-size:13px}.card{padding:17px 15px;border-radius:19px;margin:13px 0}.grid{grid-template-columns:1fr;gap:13px}textarea{min-height:135px}.actions{display:grid;grid-template-columns:1fr;gap:9px}.actions .btn{width:100%;min-height:50px}.status{padding:0 2px}#resultCard h2{font-size:19px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
-@media print{body{background:#fff!important;color:#111!important;font-size:11pt}.wrap{max-width:none;padding:0;margin:0}.top,body>main>section:not(#resultCard),footer,#printBtn{display:none!important}#resultCard{display:block!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;margin:0!important}.result{font-size:10.5pt;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}#resultCard h2{font-size:18pt;margin:0 0 12pt!important;color:#111!important}a{color:#111!important;text-decoration:none}}
+@page{size:A4;margin:18mm 17mm 20mm;@bottom-left{content:"APLUS ACHIEVER  ·  WRITING COACH";font:8pt Arial,sans-serif;color:#6b7890;letter-spacing:.08em}@bottom-right{content:"Page " counter(page);font:8pt Arial,sans-serif;color:#6b7890}}
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  html,body{background:#fff!important;color:#202b40!important;font-family:Arial,Helvetica,sans-serif!important;font-size:10.5pt!important}
+  .wrap{max-width:none!important;width:100%!important;padding:0!important;margin:0!important}
+  .top,body>main>section:not(#resultCard),footer,#printBtn,#reportActions{display:none!important}
+  #resultCard{display:block!important;overflow:visible!important;background:#fff!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;margin:0!important}
+  #resultCard:before{content:"APLUS ACHIEVER  /  LEARN. IMPROVE. ACHIEVE";display:block;color:#3159bd;font-size:9pt;font-weight:800;letter-spacing:.16em;padding:0 0 9pt;margin:0 0 18pt;border-bottom:2px solid #3159bd}
+  #resultCard:after{content:"SG PRIMARY ENGLISH  ·  P4–P6  ·  LEARNING-FOCUSED FEEDBACK";display:block;margin-top:18pt;padding-top:8pt;border-top:1px solid #dbe2ee;color:#6b7890;font-size:8pt;letter-spacing:.06em}
+  #resultCard h2{font-size:23pt!important;line-height:1.2!important;letter-spacing:-.03em!important;color:#203d87!important;margin:0 0 18pt!important;padding:0 0 12pt!important;border-bottom:1px solid #dbe2ee}
+  .result{font-size:10.2pt!important;line-height:1.62!important;color:#26334a!important;white-space:pre-wrap!important;overflow-wrap:anywhere!important;word-break:normal!important}
+  #resultCard h2,.result{orphans:3;widows:3}
+  a{color:#202b40!important;text-decoration:none!important}
+}
 </style>
 </head>
 <body><main class="wrap">
