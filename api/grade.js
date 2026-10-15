@@ -142,7 +142,7 @@ function parseAndValidateReport(raw, writingType, studentText, taskPrompt) {
     "SG PRIMARY ENGLISH WRITING COACH — WRITING ASSESSMENT",
     `Writing type: ${writingType} | Assessment version: ${ASSESSMENT_VERSION}`,
     wordNote, "", "1. TASK UNDERSTANDING",
-    ...(report.taskUnderstanding.length ? report.taskUnderstanding.map((x,n) => `(${n+1}) [${x.status}] ${x.requirement\n   Evidence: ${x.evidence || "—"}\n   Explanation: ${x.explanation}`) : ["No explicit task requirements were listed."]),
+    ...(report.taskUnderstanding.length ? report.taskUnderstanding.map((x,n) => `(${n+1}) [${x.status}] ${x.requirement}\n   Evidence: ${x.evidence || "—"}\n   Explanation: ${x.explanation}`) : ["No explicit task requirements were listed."]),
     "", "2. GENUINE ERRORS (only clear errors)",
     ...(report.genuineErrors.length ? report.genuineErrors.map((x,n) => `${n+1}. “${x.original}” → “${x.correction}”\n   Why: ${x.explanation}`) : ["No clear grammar, spelling, vocabulary or punctuation errors were identified in this review. This does not guarantee that every possible issue has been found."]),
     "", "3. WHAT THE STUDENT IS DOING WELL", ...(report.strengths.length ? report.strengths.map(x => "• " + x) : ["No specific strength was provided."]),
