@@ -43,6 +43,7 @@ footer{font-size:11px;line-height:1.7;color:#7a879c;padding:8px 4px 0;overflow-w
 footer a{color:#3457ad;text-underline-offset:3px}
 @media(max-width:620px){.brand{right:16px;top:16px}.brand-name{font-size:15px}.brand-tagline{font-size:8px;letter-spacing:.12em}.top{padding-top:62px}body{background:linear-gradient(180deg,#eaf0ff 0,#f4f6fc 300px,var(--bg) 620px)}.wrap{padding:12px 12px 30px}.top{border-radius:23px;padding:21px 18px 20px;margin-bottom:14px}h1{font-size:27px;margin-top:12px}.lead{font-size:13px}.card{padding:17px 15px;border-radius:19px;margin:13px 0}.grid{grid-template-columns:1fr;gap:13px}textarea{min-height:135px}.actions{display:grid;grid-template-columns:1fr;gap:9px}.actions .btn{width:100%;min-height:50px}.status{padding:0 2px}#resultCard h2{font-size:19px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
+@media print{body{background:#fff!important;color:#111!important;font-size:11pt}.wrap{max-width:none;padding:0;margin:0}.top,body>main>section:not(#resultCard),footer,#printBtn{display:none!important}#resultCard{display:block!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;margin:0!important}.result{font-size:10.5pt;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}#resultCard h2{font-size:18pt;margin:0 0 12pt!important;color:#111!important}a{color:#111!important;text-decoration:none}}
 </style>
 </head>
 <body><main class="wrap">
@@ -60,7 +61,7 @@ footer a{color:#3457ad;text-underline-offset:3px}
 <div class="actions"><button class="btn secondary" id="ocr">Recognise handwriting</button><button class="btn primary" id="gradeBtn">Assess My Writing</button></div>
 <div class="status" id="status" role="status" aria-live="polite"></div>
 </section>
-<section class="card hidden" id="resultCard"><h2 style="margin-top:0">Writing Assessment</h2><div class="result" id="result"></div></section>
+<section class="card hidden" id="resultCard"><div class="actions" id="reportActions"><button class="btn secondary" id="printBtn" type="button">Print Report / Save as PDF</button></div><h2 style="margin-top:0">Writing Assessment</h2><div class="result" id="result"></div></section>
 <footer>Assessment mode: SG-WA-2026.1 (learning-focused; not an official MOE/SEAB mark). References: <a href="https://www.moe.gov.sg/-/media/files/primary/2020-english-language-primary.pdf" target="_blank" rel="noopener">MOE Primary English Language Syllabus 2020</a> · <a href="https://www.seab.gov.sg/psle/psle-formats-examined-in-2026/" target="_blank" rel="noopener">SEAB PSLE formats 2026</a>. The verification date will only be updated after the official documents have been checked.</footer>
 </main>
 <script>
@@ -104,6 +105,7 @@ footer a{color:#3457ad;text-underline-offset:3px}
       statusFn((e.message || 'Recognition failed.') + (pages.length ? ' Previously recognised text has been kept.' : ''),true);
     } finally { $(buttonId).disabled=false; $('ocr').disabled=false; $('taskOcr').disabled=false; $('gradeBtn').disabled=false; }
   }
+  $('printBtn').addEventListener('click',() => window.print());
   $('ocr').addEventListener('click',() => recognizePhotos('photo','essay',status,'essay','ocr'));
   $('taskOcr').addEventListener('click',() => recognizePhotos('taskPhoto','task',(message,error=false)=>{$('taskStatus').textContent=message;$('taskStatus').className='status'+(error?' error':'');},'task','taskOcr'));
   $('gradeBtn').addEventListener('click',async()=>{
