@@ -69,7 +69,7 @@ module.exports = async function handler(req, res) {
     const text = await askAgnes([{ role: "user", content: [
       { type: "text", text: prompt },
       { type: "image_url", image_url: { url: imageDataUrl } }
-    ] }], 3000);
+    ] }], 6000);
     return res.status(200).json({ ok: true, text });
   } catch (error) {
     return res.status(502).json({ ok: false, error: error instanceof Error ? error.message.slice(0, 400) : "服务器处理失败。" });
