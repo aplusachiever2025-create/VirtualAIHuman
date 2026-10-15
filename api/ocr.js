@@ -21,31 +21,37 @@ function setCors(req, res) {
 async function askAgnes(messages, maxTokens = 6000) {
   const key = process.env.AGNES_API_KEY;
   if (!key) throw new Error("服务器尚未设置 AGNES_API_KEY 环境变量。");
-  const response = await fetch(AGNES_ENDPOINT, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: MODEL, messages, temperature: 0.1, max_tokens: maxTokens })
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const message = typeof data?.error?.message === "string" ? data.error.message.slice(0, 250) : `Agnes API returned HTTP ${response.status}`;
-    throw new Error(message);
-  }
-  const choice = data?.choices?.[0];
-  const rawContent = choice?.message?.content;
-  const content = typeof rawContent === "string"
-    ? rawContent
-    : Array.isArray(rawContent)
-      ? rawContent.map(part => typeof part?.text === "string" ? part.text : "").join("\n")
-      : "";
-  if (!content.trim()) {
+
+  // Retry once if the model exhausts its output budget on reasoning without OCR text.
+  for (const tokenLimit of [maxTokens, 10000]) {
+    const response = await fetch(AGNES_ENDPOINT, {
+      method: "POST",
+      headers: { Authorization: \`Bearer \${key}\`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: MODEL, messages, temperature: 0.1, max_tokens: tokenLimit })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const message = typeof data?.error?.message === "string" ? data.error.message.slice(0, 250) : \`Agnes API returned HTTP \${response.status}\`;
+      throw new Error(message);
+    }
+    const choice = data?.choices?.[0];
+    const rawContent = choice?.message?.content;
+    const content = typeof rawContent === "string"
+      ? rawContent
+      : Array.isArray(rawContent)
+        ? rawContent.map(part => typeof part?.text === "string" ? part.text : "").join("\\n")
+        : "";
+    if (content.trim()) return content.trim();
+
     const finish = typeof choice?.finish_reason === "string" ? choice.finish_reason : "unknown";
     const hasReasoning = Boolean(choice?.message?.reasoning_content);
-    throw new Error(
-      `Agnes 已响应，但没有可用识别文字（finish_reason=${finish}${hasReasoning ? "；模型只返回了推理内容" : ""}）。请重试；若再次发生，请查看 Vercel 的 /api/ocr 运行日志。`
-    );
+    if (finish !== "length" || tokenLimit === 10000) {
+      throw new Error(
+        \`Agnes 已响应，但没有可用识别文字（finish_reason=\${finish}\${hasReasoning ? "；模型只返回了推理内容" : ""}）。请重试；若再次发生，请查看 Vercel 的 /api/ocr 运行日志。\`
+      );
+    }
   }
-  return content.trim();
+  throw new Error("Agnes OCR 没有返回可用识别文字，请重试。");
 }
 
 module.exports = async function handler(req, res) {
