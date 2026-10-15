@@ -26,12 +26,12 @@ async function askAgnes(messages, maxTokens = 6000) {
   for (const tokenLimit of [maxTokens, 10000]) {
     const response = await fetch(AGNES_ENDPOINT, {
       method: "POST",
-      headers: { Authorization: \`Bearer \${key}\`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({ model: MODEL, messages, temperature: 0.1, max_tokens: tokenLimit })
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const message = typeof data?.error?.message === "string" ? data.error.message.slice(0, 250) : \`Agnes API returned HTTP \${response.status}\`;
+      const message = typeof data?.error?.message === "string" ? data.error.message.slice(0, 250) : `Agnes API returned HTTP ${response.status}`;
       throw new Error(message);
     }
     const choice = data?.choices?.[0];
@@ -39,7 +39,7 @@ async function askAgnes(messages, maxTokens = 6000) {
     const content = typeof rawContent === "string"
       ? rawContent
       : Array.isArray(rawContent)
-        ? rawContent.map(part => typeof part?.text === "string" ? part.text : "").join("\\n")
+        ? rawContent.map(part => typeof part?.text === "string" ? part.text : "").join("\n")
         : "";
     if (content.trim()) return content.trim();
 
@@ -47,7 +47,7 @@ async function askAgnes(messages, maxTokens = 6000) {
     const hasReasoning = Boolean(choice?.message?.reasoning_content);
     if (finish !== "length" || tokenLimit === 10000) {
       throw new Error(
-        \`Agnes 已响应，但没有可用识别文字（finish_reason=\${finish}\${hasReasoning ? "；模型只返回了推理内容" : ""}）。请重试；若再次发生，请查看 Vercel 的 /api/ocr 运行日志。\`
+        `Agnes 已响应，但没有可用识别文字（finish_reason=${finish}${hasReasoning ? "；模型只返回了推理内容" : ""}）。请重试；若再次发生，请查看 Vercel 的 /api/ocr 运行日志。`
       );
     }
   }
