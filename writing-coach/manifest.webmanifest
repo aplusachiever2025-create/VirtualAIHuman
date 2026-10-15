@@ -1,18 +1,18 @@
 {
-  "name": "SG Primary English Writing Coach",
-  "short_name": "Writing Coach",
-  "description": "Learning-focused writing feedback for Singapore Primary English P4–P6.",
+  "name": "Magic Writing Coach",
+  "short_name": "Magic Writing Coach",
+  "description": "AI writing coach for Singapore Primary English P4–P6.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f2f5fb",
-  "theme_color": "#3159bd",
+  "theme_color": "#244bd6",
   "icons": [
     {
-      "src": "./icon.svg",
+      "src": "./icon.svg?v=magic-writing-coach-1",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
